@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import type { CSSProperties } from "react";
 import { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase";
-import type { Session, Team } from "@/lib/types";
+import type { Session, Team, Reflection } from "@/lib/types";
 import Leaderboard from "@/components/Leaderboard";
 import CurveballPanel from "@/components/CurveballPanel";
 import { toast } from "@/components/Toast";
@@ -105,6 +105,10 @@ export default function ProfessorView() {
   const [simulating, setSimulating] = useState(false);
   const [simError, setSimError] = useState("");
 
+  // Stage 3 — Reflections
+  const [reflections, setReflections] = useState<Reflection[]>([]);
+  const [highlightingId, setHighlightingId] = useState<string | null>(null);
+
   // UI
   const [showCurveball, setShowCurveball] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -178,6 +182,40 @@ export default function ProfessorView() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stage, session?.id]);
 
+  // Reflections subscription (stage 3)
+  useEffect(() => {
+    if (stage !== 3 || !session) return;
+
+    const fetchReflections = async () => {
+      const { data } = await supabase
+        .from("reflections")
+        .select("*, teams(team_name)")
+        .eq("session_id", session.id)
+        .order("created_at", { ascending: true });
+      if (data) {
+        setReflections(
+          data.map((r: Record<string, unknown> & { teams?: { team_name?: string } }) => ({
+            ...r,
+            team_name: r.teams?.team_name ?? "Unknown Team",
+          })) as Reflection[]
+        );
+      }
+    };
+
+    fetchReflections();
+    const ch = supabase
+      .channel(`reflections-${session.id}`)
+      .on("postgres_changes", {
+        event: "INSERT",
+        schema: "public",
+        table: "reflections",
+        filter: `session_id=eq.${session.id}`,
+      }, () => fetchReflections())
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stage, session?.id]);
+
   // ── Handlers ─────────────────────────────────────────────────────────
 
   async function handleAuth() {
@@ -242,6 +280,24 @@ export default function ProfessorView() {
       toast(msg, "error");
     }
     setSimulating(false);
+  }
+
+  async function handleHighlight(reflection: Reflection) {
+    if (!session) return;
+    setHighlightingId(reflection.id);
+    await supabase
+      .from("sessions")
+      .update({
+        highlighted_reflection: {
+          team_name: reflection.team_name ?? "Unknown",
+          biggest_mistake: reflection.biggest_mistake,
+          winning_insight: reflection.winning_insight,
+          biggest_surprise: reflection.biggest_surprise,
+        },
+      })
+      .eq("id", session.id);
+    toast("Reflection highlighted to all students!", "info");
+    setHighlightingId(null);
   }
 
   async function handleReset() {
@@ -663,6 +719,9 @@ export default function ProfessorView() {
 
   // ── STAGE 3 — Results Dashboard ────────────────────────────────────────
 
+  const teamCount = teams.length;
+  const reflCount = reflections.length;
+
   return (
     <div style={s.page}>
       <div style={s.header}>
@@ -679,6 +738,81 @@ export default function ProfessorView() {
         <button onClick={handleReset} style={{ ...s.btnDanger, flex: 1, minWidth: "180px" }}>
           🔄 Reset Session
         </button>
+      </div>
+
+      {/* ── Class Reflections Panel ── */}
+      <div style={s.card}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "0.75rem", marginBottom: "1.25rem" }}>
+          <div>
+            <h2 style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--text)", margin: "0 0 0.2rem 0" }}>
+              Class Reflections 🧠
+            </h2>
+            <p style={{ ...s.muted, fontSize: "0.8rem" }}>
+              {reflCount} of {teamCount} team{teamCount !== 1 ? "s" : ""} reflected
+            </p>
+          </div>
+          <button
+            onClick={() => window.print()}
+            style={{ ...s.btnOutline, fontSize: "0.82rem", padding: "0.5rem 1rem" }}
+          >
+            🖨 Export All as PDF
+          </button>
+        </div>
+
+        {reflections.length === 0 ? (
+          <p style={{ ...s.muted, textAlign: "center", padding: "2rem 0", fontSize: "0.875rem" }}>
+            Waiting for students to submit reflections…
+          </p>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+            {reflections.map((r) => (
+              <div key={r.id} style={{
+                background: "var(--surface)",
+                border: "1px solid var(--border)",
+                borderRadius: "10px",
+                padding: "1.25rem",
+              }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1rem", flexWrap: "wrap", gap: "0.5rem" }}>
+                  <span style={{ fontWeight: 700, color: "var(--text)", fontSize: "0.9rem" }}>
+                    {r.team_name}
+                  </span>
+                  <button
+                    onClick={() => handleHighlight(r)}
+                    disabled={highlightingId === r.id}
+                    style={{
+                      background: "rgba(167,139,250,0.15)",
+                      color: "var(--accent)",
+                      border: "1px solid var(--accent)",
+                      borderRadius: "6px",
+                      padding: "0.3rem 0.75rem",
+                      fontSize: "0.75rem",
+                      fontWeight: 600,
+                      cursor: "pointer",
+                      fontFamily: "inherit",
+                      opacity: highlightingId === r.id ? 0.5 : 1,
+                    }}
+                  >
+                    {highlightingId === r.id ? "Highlighting…" : "✨ Highlight"}
+                  </button>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "0.75rem" }}>
+                  {[
+                    { label: "Biggest mistake", text: r.biggest_mistake },
+                    { label: "Winning insight", text: r.winning_insight },
+                    { label: "Biggest surprise", text: r.biggest_surprise },
+                  ].map(({ label, text }) => (
+                    <div key={label}>
+                      <p style={{ fontSize: "0.65rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 0.3rem 0" }}>{label}</p>
+                      <p style={{ fontSize: "0.82rem", color: "var(--text)", lineHeight: 1.5, margin: 0 }}>
+                        {text || <span style={{ color: "var(--muted)", fontStyle: "italic" }}>—</span>}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

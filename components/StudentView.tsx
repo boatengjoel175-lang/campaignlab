@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import type { CSSProperties } from "react";
 import { createClient } from "@/lib/supabase";
-import type { Session, SimulationResult, Platform } from "@/lib/types";
+import type { Session, SimulationResult, Platform, HighlightedReflection } from "@/lib/types";
 import ScoreCard from "@/components/ScoreCard";
 import { toast } from "@/components/Toast";
 
@@ -100,6 +100,16 @@ export default function StudentView() {
   const [result, setResult] = useState<SimulationResult | null>(null);
   const [showResult, setShowResult] = useState(false);
 
+  // Stage 3 — Reflection journal
+  const [reflMistake, setReflMistake] = useState("");
+  const [reflInsight, setReflInsight] = useState("");
+  const [reflSurprise, setReflSurprise] = useState("");
+  const [reflSubmitting, setReflSubmitting] = useState(false);
+  const [reflSubmitted, setReflSubmitted] = useState(false);
+
+  // Highlighted reflection from professor
+  const [highlightBanner, setHighlightBanner] = useState<HighlightedReflection | null>(null);
+
   // ── Effects ──────────────────────────────────────────────────────────
 
   // Restore from localStorage on mount
@@ -150,6 +160,10 @@ export default function StudentView() {
         const updated = payload.new as Session;
         if (updated.curveball) {
           setCurveball(updated.curveball as { type: string; message: string });
+        }
+        if (updated.highlighted_reflection) {
+          setHighlightBanner(updated.highlighted_reflection);
+          setTimeout(() => setHighlightBanner(null), 10000);
         }
       })
       .subscribe();
@@ -301,6 +315,22 @@ export default function StudentView() {
     if (error) { setSubmitError(error.message); toast(error.message, "error"); return; }
     toast("Strategy submitted! Waiting for simulation…", "success");
     setStage(3);
+  }
+
+  async function handleReflection() {
+    if (!teamId || !session) return;
+    setReflSubmitting(true);
+    const { error } = await supabase.from("reflections").insert({
+      session_id: session.id,
+      team_id: teamId,
+      biggest_mistake: reflMistake.trim(),
+      winning_insight: reflInsight.trim(),
+      biggest_surprise: reflSurprise.trim(),
+    });
+    setReflSubmitting(false);
+    if (error) { toast(error.message, "error"); return; }
+    setReflSubmitted(true);
+    toast("Reflection submitted!", "success");
   }
 
   const budgetTotal = platforms.reduce((sum, p) => sum + p.budget_percent, 0);
@@ -725,27 +755,123 @@ export default function StudentView() {
   // ── STAGE 3 — Waiting for results ────────────────────────────────────
 
   return (
-    <div style={s.page}>
-      {!showResult ? (
-        <div style={{ textAlign: "center", padding: "4rem 0" }}>
-          <div style={{ fontSize: "3.5rem" }}>✅</div>
-          <h2 style={{ ...s.title, marginTop: "1rem" }}>Strategy submitted!</h2>
-          <p style={{ ...s.muted, marginTop: "0.5rem" }}>
-            Waiting for professor to run simulation
+    <>
+      {/* Professor-highlighted reflection banner */}
+      {highlightBanner && (
+        <div style={{
+          position: "fixed",
+          top: 0, left: 0, right: 0,
+          background: "var(--accent)",
+          color: "white",
+          padding: "1.25rem 2rem",
+          zIndex: 300,
+          boxShadow: "0 4px 24px rgba(0,0,0,0.4)",
+        }}>
+          <p style={{ fontWeight: 700, fontSize: "0.75rem", letterSpacing: "0.1em", textTransform: "uppercase", margin: "0 0 0.5rem 0", opacity: 0.8 }}>
+            💡 Professor Highlight — {highlightBanner.team_name}
           </p>
-          <PulsingDots />
-        </div>
-      ) : result ? (
-        <div style={{ opacity: 1, transition: "opacity 0.5s ease" }}>
-          <div style={{ textAlign: "center", marginBottom: "2rem" }}>
-            <div style={{ fontSize: "2.5rem", letterSpacing: "0.1em" }}>🎉 🏆 🎉</div>
-            <h2 style={{ ...s.title, marginTop: "0.75rem" }}>The market has spoken.</h2>
-            <p style={{ ...s.muted, marginTop: "0.25rem" }}>Here are your results.</p>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "0.75rem" }}>
+            {[
+              { label: "Biggest mistake", text: highlightBanner.biggest_mistake },
+              { label: "Winning insight", text: highlightBanner.winning_insight },
+              { label: "Biggest surprise", text: highlightBanner.biggest_surprise },
+            ].map((item) => (
+              <div key={item.label}>
+                <p style={{ fontSize: "0.65rem", opacity: 0.7, textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 0.2rem 0" }}>{item.label}</p>
+                <p style={{ fontSize: "0.875rem", margin: 0 }}>{item.text}</p>
+              </div>
+            ))}
           </div>
-          <ScoreCard result={result} team_name={teamName || "Your Team"} />
+          <button onClick={() => setHighlightBanner(null)} style={{ position: "absolute", top: "0.75rem", right: "1rem", background: "transparent", border: "none", color: "white", cursor: "pointer", fontSize: "1.1rem", opacity: 0.7 }}>✕</button>
         </div>
-      ) : null}
-    </div>
+      )}
+
+      <div style={{ ...s.page, paddingTop: highlightBanner ? "8rem" : undefined }}>
+        {!showResult ? (
+          <div style={{ textAlign: "center", padding: "4rem 0" }}>
+            <div style={{ fontSize: "3.5rem" }}>✅</div>
+            <h2 style={{ ...s.title, marginTop: "1rem" }}>Strategy submitted!</h2>
+            <p style={{ ...s.muted, marginTop: "0.5rem" }}>
+              Waiting for professor to run simulation
+            </p>
+            <PulsingDots />
+          </div>
+        ) : result ? (
+          <div style={{ opacity: 1, transition: "opacity 0.5s ease" }}>
+            <div style={{ textAlign: "center", marginBottom: "2rem" }}>
+              <div style={{ fontSize: "2.5rem", letterSpacing: "0.1em" }}>🎉 🏆 🎉</div>
+              <h2 style={{ ...s.title, marginTop: "0.75rem" }}>The market has spoken.</h2>
+              <p style={{ ...s.muted, marginTop: "0.25rem" }}>Here are your results.</p>
+            </div>
+
+            <ScoreCard result={result} team_name={teamName || "Your Team"} />
+
+            {/* ── Reflection journal ── */}
+            <div style={{ ...s.card, marginTop: "1.5rem" }}>
+              <h3 style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--text)", margin: "0 0 0.25rem 0" }}>
+                Take a moment to reflect 🧠
+              </h3>
+              <p style={{ ...s.muted, marginBottom: "1.25rem" }}>
+                Your answers are anonymous to other students.
+              </p>
+
+              {reflSubmitted ? (
+                <div style={{ textAlign: "center", padding: "1.5rem 0" }}>
+                  <div style={{ fontSize: "2rem", marginBottom: "0.5rem" }}>🙏</div>
+                  <p style={{ color: "var(--green)", fontWeight: 700, margin: "0 0 0.25rem 0" }}>
+                    Thank you — your professor can see this.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  {[
+                    { label: "What was the biggest mistake in your strategy?", val: reflMistake, set: setReflMistake },
+                    { label: "What did the winning team do that you didn't?", val: reflInsight, set: setReflInsight },
+                    { label: "What surprised you most about this simulation?", val: reflSurprise, set: setReflSurprise },
+                  ].map(({ label, val, set }) => (
+                    <div key={label} style={{ marginBottom: "1rem" }}>
+                      <label style={{ display: "block", fontSize: "0.8rem", color: "var(--muted)", marginBottom: "0.4rem", lineHeight: 1.4 }}>
+                        {label}
+                      </label>
+                      <textarea
+                        value={val}
+                        onChange={(e) => set(e.target.value)}
+                        rows={3}
+                        style={{
+                          width: "100%",
+                          boxSizing: "border-box",
+                          background: "var(--surface)",
+                          border: "1px solid var(--border)",
+                          borderRadius: "8px",
+                          padding: "0.65rem 0.85rem",
+                          color: "var(--text)",
+                          fontSize: "0.875rem",
+                          fontFamily: "inherit",
+                          resize: "vertical",
+                          outline: "none",
+                          lineHeight: 1.5,
+                        }}
+                      />
+                    </div>
+                  ))}
+                  <button
+                    onClick={handleReflection}
+                    disabled={reflSubmitting || (!reflMistake.trim() && !reflInsight.trim() && !reflSurprise.trim())}
+                    style={{
+                      ...s.btnGreen,
+                      opacity: reflSubmitting ? 0.6 : 1,
+                      marginTop: "0.5rem",
+                    }}
+                  >
+                    {reflSubmitting ? "Submitting…" : "Submit Reflection"}
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        ) : null}
+      </div>
+    </>
   );
 }
 

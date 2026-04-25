@@ -10,6 +10,7 @@ export interface Session {
   time_limit: number;
   status: string;
   curveball: Curveball | null;
+  highlighted_reflection: HighlightedReflection | null;
   created_at: string;
 }
 
@@ -50,4 +51,22 @@ export interface SimulationResult {
 export interface Curveball {
   type: string;
   message: string;
+}
+
+export interface HighlightedReflection {
+  team_name: string;
+  biggest_mistake: string;
+  winning_insight: string;
+  biggest_surprise: string;
+}
+
+export interface Reflection {
+  id: string;
+  session_id: string;
+  team_id: string;
+  biggest_mistake: string;
+  winning_insight: string;
+  biggest_surprise: string;
+  created_at: string;
+  team_name?: string;
 }
