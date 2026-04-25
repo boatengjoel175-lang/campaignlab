@@ -1,3 +1,4 @@
+// CampaignLab v1.0 — Gemini powered
 "use client";
 
 import { useState } from "react";
