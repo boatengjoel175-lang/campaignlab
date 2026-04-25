@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "@/components/Toast";
 
 type CurveballType = "budget_cut" | "competitor_viral" | "audience_shift";
 
-const CURVEBALLSS = [
+const CURVEBALLS = [
   {
     type: "budget_cut" as CurveballType,
     title: "Budget Slashed 💸",
@@ -51,6 +52,7 @@ export default function CurveballPanel({
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to trigger");
       setTriggered(true);
+      toast("Curveball triggered! All students will see the alert.", "success");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to trigger curveball");
     }
@@ -145,7 +147,7 @@ export default function CurveballPanel({
           </div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
-            {CURVEBALLSS.map((cb) => (
+            {CURVEBALLS.map((cb) => (
               <div
                 key={cb.type}
                 style={{

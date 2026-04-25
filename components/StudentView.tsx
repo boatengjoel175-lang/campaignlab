@@ -1,9 +1,11 @@
 "use client";
 
 import { useState, useEffect, useMemo, useRef } from "react";
+import type { CSSProperties } from "react";
 import { createClient } from "@/lib/supabase";
 import type { Session, SimulationResult, Platform } from "@/lib/types";
 import ScoreCard from "@/components/ScoreCard";
+import { toast } from "@/components/Toast";
 
 // ── Constants ──────────────────────────────────────────────────────────
 
@@ -187,7 +189,7 @@ export default function StudentView() {
       .maybeSingle()
       .then(({ data }) => {
         if (data) {
-          setResult(data as SimulationResult);
+          setResult(data as unknown as SimulationResult);
           setTimeout(() => setShowResult(true), 400);
         }
       });
@@ -225,6 +227,7 @@ export default function StudentView() {
 
     if (!sessions?.length) {
       setJoinError("Session not found. Check the code and try again.");
+      toast("Session not found. Check the code and try again.", "error");
       setJoining(false);
       return;
     }
@@ -241,6 +244,7 @@ export default function StudentView() {
 
     if (teamErr || !team) {
       setJoinError("Failed to join session. Please try again.");
+      toast("Failed to join session. Please try again.", "error");
       return;
     }
 
@@ -294,7 +298,8 @@ export default function StudentView() {
       })
       .eq("id", teamId);
     setSubmitting(false);
-    if (error) { setSubmitError(error.message); return; }
+    if (error) { setSubmitError(error.message); toast(error.message, "error"); return; }
+    toast("Strategy submitted! Waiting for simulation…", "success");
     setStage(3);
   }
 
@@ -688,7 +693,7 @@ export default function StudentView() {
 
 // ── Styles ─────────────────────────────────────────────────────────────
 
-const s: Record<string, React.CSSProperties> = {
+const s: Record<string, CSSProperties> = {
   pageCenter: {
     minHeight: "100vh",
     display: "flex",

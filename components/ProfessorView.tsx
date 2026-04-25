@@ -1,11 +1,13 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import type { CSSProperties } from "react";
 import { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase";
 import type { Session, Team } from "@/lib/types";
 import Leaderboard from "@/components/Leaderboard";
 import CurveballPanel from "@/components/CurveballPanel";
+import { toast } from "@/components/Toast";
 
 // ── Utilities ──────────────────────────────────────────────────────────
 
@@ -186,7 +188,7 @@ export default function ProfessorView() {
       : supabase.auth.signUp({ email, password });
     const { error } = await fn;
     setAuthLoading(false);
-    if (error) setAuthError(error.message);
+    if (error) { setAuthError(error.message); toast(error.message, "error"); }
   }
 
   async function handleLaunch() {
@@ -209,8 +211,9 @@ export default function ProfessorView() {
       .select()
       .single();
     setLaunching(false);
-    if (error) { setLaunchError(error.message); return; }
+    if (error) { setLaunchError(error.message); toast(error.message, "error"); return; }
     setSession(data as Session);
+    toast("Session created successfully!", "success");
     setStage(2);
   }
 
@@ -225,13 +228,18 @@ export default function ProfessorView() {
         body: JSON.stringify({ session_id: session.id }),
       });
       if (res.ok) {
+        toast("Simulation complete! Results are live.", "success");
         setStage(3);
       } else {
         const d = await res.json().catch(() => ({}));
-        setSimError(d.message || "Simulation failed. Check API logs.");
+        const msg = d.message || "Simulation failed. Check API logs.";
+        setSimError(msg);
+        toast(msg, "error");
       }
     } catch {
-      setSimError("Network error — check your connection.");
+      const msg = "Network error — check your connection.";
+      setSimError(msg);
+      toast(msg, "error");
     }
     setSimulating(false);
   }
@@ -603,7 +611,7 @@ export default function ProfessorView() {
 
 // ── Styles ─────────────────────────────────────────────────────────────
 
-const s: Record<string, React.CSSProperties> = {
+const s: Record<string, CSSProperties> = {
   page: {
     maxWidth: "760px",
     margin: "0 auto",
@@ -808,35 +816,5 @@ const s: Record<string, React.CSSProperties> = {
     textAlign: "center",
     fontFamily: "inherit",
     marginTop: "0.5rem",
-  },
-  overlay: {
-    position: "fixed",
-    inset: 0,
-    background: "rgba(0,0,0,0.75)",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    zIndex: 1000,
-  },
-  overlayCard: {
-    background: "var(--card)",
-    border: "1px solid var(--border)",
-    borderRadius: "12px",
-    padding: "2rem",
-    maxWidth: "500px",
-    width: "90%",
-    position: "relative",
-  },
-  overlayClose: {
-    position: "absolute",
-    top: "1rem",
-    right: "1rem",
-    background: "transparent",
-    border: "none",
-    color: "var(--muted)",
-    cursor: "pointer",
-    fontSize: "1.25rem",
-    lineHeight: "1",
-    fontFamily: "inherit",
   },
 };
