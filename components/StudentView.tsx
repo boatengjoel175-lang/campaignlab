@@ -113,6 +113,7 @@ export default function StudentView() {
         if (teamRes.data && sessRes.data) {
           setTeamId(tid);
           setSession(sessRes.data as Session);
+          setTeamName(teamRes.data.team_name ?? "");
           setStage(teamRes.data.submitted ? 3 : 2);
         }
         setRestored(true);
@@ -678,7 +679,7 @@ export default function StudentView() {
             <h2 style={{ ...s.title, marginTop: "0.75rem" }}>The market has spoken.</h2>
             <p style={{ ...s.muted, marginTop: "0.25rem" }}>Here are your results.</p>
           </div>
-          <ScoreCard result={result} />
+          <ScoreCard result={result} team_name={teamName || "Your Team"} />
         </div>
       ) : null}
     </div>

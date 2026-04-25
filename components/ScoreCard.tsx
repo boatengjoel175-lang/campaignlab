@@ -1,102 +1,212 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import type { SimulationResult } from "@/lib/types";
 
-function MetricCard({
-  label,
+const CIRCUMFERENCE = 2 * Math.PI * 40; // 251.33
+
+function getColor(normalized: number, isRoi = false, roiRaw = 0): string {
+  if (isRoi) {
+    if (roiRaw > 4) return "#34d399";
+    if (roiRaw >= 2) return "#fb923c";
+    return "#f87171";
+  }
+  if (normalized > 70) return "#34d399";
+  if (normalized >= 40) return "#fb923c";
+  return "#f87171";
+}
+
+function Ring({
   value,
   unit,
-  explanation,
+  label,
+  normalized,
   color,
+  explanation,
+  delay = 0,
 }: {
-  label: string;
-  value: string | number;
+  value: string;
   unit: string;
-  explanation: string;
+  label: string;
+  normalized: number;
   color: string;
+  explanation: string;
+  delay?: number;
 }) {
+  const [progress, setProgress] = useState(0);
+
+  useEffect(() => {
+    const t = setTimeout(() => setProgress(Math.min(100, normalized)), 100 + delay);
+    return () => clearTimeout(t);
+  }, [normalized, delay]);
+
+  const offset = CIRCUMFERENCE * (1 - progress / 100);
+
   return (
-    <div style={{
-      background: "var(--surface)",
-      border: "1px solid var(--border)",
-      borderRadius: "10px",
-      padding: "1.25rem",
-      borderTop: `3px solid ${color}`,
-    }}>
-      <p style={{
-        fontSize: "0.68rem",
-        fontWeight: 700,
-        color: "var(--muted)",
-        textTransform: "uppercase",
-        letterSpacing: "0.08em",
-        margin: "0 0 0.4rem 0",
-      }}>
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.6rem" }}>
+      <div style={{ position: "relative", width: "116px", height: "116px" }}>
+        <svg
+          width="116"
+          height="116"
+          viewBox="0 0 100 100"
+          style={{ transform: "rotate(-90deg)" }}
+        >
+          {/* Track */}
+          <circle
+            cx="50" cy="50" r="40"
+            fill="none"
+            stroke="var(--border)"
+            strokeWidth="8"
+          />
+          {/* Progress */}
+          <circle
+            cx="50" cy="50" r="40"
+            fill="none"
+            stroke={color}
+            strokeWidth="8"
+            strokeLinecap="round"
+            strokeDasharray={CIRCUMFERENCE}
+            strokeDashoffset={offset}
+            style={{ transition: "stroke-dashoffset 1.2s cubic-bezier(0.4,0,0.2,1)" }}
+          />
+        </svg>
+        <div style={{
+          position: "absolute",
+          inset: 0,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+        }}>
+          <span style={{ fontSize: "1.15rem", fontWeight: 700, color, lineHeight: 1 }}>
+            {value}
+          </span>
+          <span style={{ fontSize: "0.62rem", color: "var(--muted)", marginTop: "2px" }}>
+            {unit}
+          </span>
+        </div>
+      </div>
+      <span style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--text)", textAlign: "center" }}>
         {label}
-      </p>
-      <p style={{ fontSize: "1.8rem", fontWeight: 700, color, margin: "0 0 0.6rem 0", lineHeight: 1 }}>
-        {value}
-        <span style={{ fontSize: "0.85rem", fontWeight: 400, color }}>{unit}</span>
-      </p>
-      <p style={{ fontSize: "0.78rem", color: "var(--muted)", lineHeight: 1.55, margin: 0 }}>
+      </span>
+      <p style={{
+        fontSize: "0.71rem",
+        color: "var(--muted)",
+        fontStyle: "italic",
+        textAlign: "center",
+        lineHeight: 1.5,
+        margin: 0,
+        maxWidth: "140px",
+      }}>
         {explanation}
       </p>
     </div>
   );
 }
 
-export default function ScoreCard({ result }: { result: SimulationResult }) {
+export default function ScoreCard({
+  result,
+  team_name,
+}: {
+  result: SimulationResult;
+  team_name: string;
+}) {
+  // Normalise each metric to 0–100 for ring fill
+  // Reach: 100k people = 100%
+  const reachNorm = Math.min(100, (result.reach / 100_000) * 100);
+  // Engagement: 20% real-world engagement = 100% ring
+  const engNorm = Math.min(100, result.engagement_rate * 5);
+  // Conversion: 10% conversion = 100% ring
+  const convNorm = Math.min(100, result.conversion_rate * 10);
+  // ROI: 8× = 100% ring, colour based on raw roi
+  const roiNorm = Math.min(100, (result.roi / 8) * 100);
+
+  const reachDisplay =
+    result.reach >= 1_000_000
+      ? `${(result.reach / 1_000_000).toFixed(1)}M`
+      : result.reach >= 1_000
+      ? `${(result.reach / 1_000).toFixed(0)}k`
+      : String(result.reach);
+
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+    <div style={{
+      background: "var(--card)",
+      border: "1px solid var(--border)",
+      borderRadius: "12px",
+      padding: "1.75rem",
+    }}>
+      <h3 style={{
+        fontSize: "1.25rem",
+        fontWeight: 700,
+        color: "var(--text)",
+        margin: "0 0 1.5rem 0",
+        textAlign: "center",
+      }}>
+        {team_name}
+      </h3>
+
       <div style={{
         display: "grid",
-        gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-        gap: "1rem",
+        gridTemplateColumns: "repeat(2, 1fr)",
+        gap: "1.5rem 1rem",
+        justifyItems: "center",
       }}>
-        <MetricCard
+        <Ring
           label="Total Reach"
-          value={result.reach.toLocaleString()}
-          unit=" people"
+          value={reachDisplay}
+          unit="people"
+          normalized={reachNorm}
+          color={getColor(reachNorm)}
           explanation={result.reach_explanation}
-          color="var(--accent)"
+          delay={0}
         />
-        <MetricCard
+        <Ring
           label="Engagement Rate"
           value={result.engagement_rate.toFixed(1)}
           unit="%"
+          normalized={engNorm}
+          color={getColor(engNorm)}
           explanation={result.engagement_explanation}
-          color="var(--green)"
+          delay={100}
         />
-        <MetricCard
+        <Ring
           label="Conversion Rate"
           value={result.conversion_rate.toFixed(1)}
           unit="%"
+          normalized={convNorm}
+          color={getColor(convNorm)}
           explanation={result.conversion_explanation}
-          color="var(--amber)"
+          delay={200}
         />
-        <MetricCard
+        <Ring
           label="ROI"
           value={result.roi.toFixed(1)}
           unit="×"
+          normalized={roiNorm}
+          color={getColor(roiNorm, true, result.roi)}
           explanation={result.roi_explanation}
-          color="var(--red)"
+          delay={300}
         />
       </div>
 
       <div style={{
-        background: "var(--card)",
+        marginTop: "1.75rem",
+        background: "var(--surface)",
         border: "1px solid var(--border)",
-        borderRadius: "12px",
-        padding: "1.5rem",
+        borderRadius: "8px",
+        padding: "1rem 1.25rem",
       }}>
         <p style={{
-          fontSize: "0.7rem",
+          fontSize: "0.68rem",
           fontWeight: 700,
           color: "var(--muted)",
           textTransform: "uppercase",
           letterSpacing: "0.08em",
-          margin: "0 0 0.6rem 0",
+          margin: "0 0 0.5rem 0",
         }}>
           AI Verdict
         </p>
-        <p style={{ fontSize: "0.95rem", color: "var(--text)", lineHeight: 1.7, margin: 0 }}>
+        <p style={{ fontSize: "0.9rem", color: "var(--text)", lineHeight: 1.65, margin: 0 }}>
           {result.overall_verdict}
         </p>
       </div>

@@ -462,14 +462,12 @@ export default function ProfessorView() {
 
     return (
       <div style={s.page}>
-        {/* Curveball overlay */}
+        {/* Curveball overlay — self-contained */}
         {showCurveball && (
-          <div style={s.overlay}>
-            <div style={s.overlayCard}>
-              <button onClick={() => setShowCurveball(false)} style={s.overlayClose}>✕</button>
-              <CurveballPanel sessionId={session.id} />
-            </div>
-          </div>
+          <CurveballPanel
+            sessionId={session.id}
+            onClose={() => setShowCurveball(false)}
+          />
         )}
 
         {/* Header */}
