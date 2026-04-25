@@ -303,52 +303,127 @@ export default function ProfessorView() {
 
   if (stage === 1 && !user) {
     return (
-      <div style={{ ...s.page, alignItems: "center" }}>
-        <div style={s.authCard}>
-          <h1 style={s.authTitle}>Professor Login</h1>
-          <p style={{ ...s.muted, marginBottom: "1.5rem" }}>
-            Sign in to create a campaign session
-          </p>
+      <div style={{
+        minHeight: "100vh",
+        background: "#efefef",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "2rem 1rem",
+      }}>
+        <div style={{
+          width: "100%",
+          maxWidth: "420px",
+          background: "white",
+          boxShadow: "0 4px 32px rgba(0,0,0,0.13)",
+          borderRadius: "2px",
+          overflow: "hidden",
+        }}>
+          {/* HdM red top bar */}
+          <div style={{ height: "5px", background: "#e30613" }} />
 
-          {authError && <div style={{ ...s.error, marginBottom: "1rem" }}>{authError}</div>}
-
-          <div style={s.field}>
-            <label style={s.label}>Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="professor@hdm-stuttgart.de"
-              style={s.input}
-              onKeyDown={(e) => e.key === "Enter" && handleAuth()}
-            />
+          {/* Logo section */}
+          <div style={{ padding: "2rem 2.5rem 1.5rem", borderBottom: "1px solid #e8e8e8" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="https://hdm-stuttgart.de/_assets/08d436265eb2875b100f4b4e69dd70a4/Images/Logo/Logo-HdM_b.svg"
+                alt="Hochschule der Medien Stuttgart"
+                style={{ height: "50px" }}
+              />
+              <div style={{
+                fontSize: "2.4rem",
+                fontWeight: 900,
+                color: "#e30613",
+                fontStyle: "italic",
+                lineHeight: 1,
+                letterSpacing: "-0.03em",
+                fontFamily: "Arial Black, Arial, sans-serif",
+              }}>
+                SMM
+              </div>
+            </div>
+            <p style={{
+              margin: "0.55rem 0 0 0",
+              fontSize: "0.68rem",
+              letterSpacing: "0.14em",
+              textTransform: "uppercase",
+              color: "#888",
+              fontFamily: "Arial, sans-serif",
+            }}>
+              Campaign Lab &middot; Professor Access
+            </p>
           </div>
-          <div style={s.field}>
-            <label style={s.label}>Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              style={s.input}
-              onKeyDown={(e) => e.key === "Enter" && handleAuth()}
-            />
+
+          {/* Form section */}
+          <div style={{ padding: "2rem 2.5rem 2.5rem" }}>
+            {authError && (
+              <div style={{
+                background: "#fff0f0",
+                border: "1px solid #e30613",
+                borderRadius: "2px",
+                padding: "0.65rem 1rem",
+                color: "#e30613",
+                fontSize: "0.85rem",
+                marginBottom: "1.25rem",
+              }}>
+                {authError}
+              </div>
+            )}
+
+            <div style={{ marginBottom: "1.1rem" }}>
+              <label style={hdmLabel}>Email</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="professor@hdm-stuttgart.de"
+                style={hdmInput}
+                onKeyDown={(e) => e.key === "Enter" && handleAuth()}
+              />
+            </div>
+            <div style={{ marginBottom: "1.5rem" }}>
+              <label style={hdmLabel}>Password</label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                style={hdmInput}
+                onKeyDown={(e) => e.key === "Enter" && handleAuth()}
+              />
+            </div>
+
+            <button
+              onClick={handleAuth}
+              disabled={authLoading}
+              style={{
+                ...hdmBtn,
+                opacity: authLoading ? 0.75 : 1,
+              }}
+            >
+              {authLoading ? "Signing in…" : authMode === "login" ? "Log in" : "Sign Up"}
+            </button>
+
+            <button
+              onClick={() => { setAuthMode(authMode === "login" ? "signup" : "login"); setAuthError(""); }}
+              style={{
+                display: "block",
+                marginTop: "1rem",
+                width: "100%",
+                background: "transparent",
+                border: "none",
+                color: "#e30613",
+                cursor: "pointer",
+                fontSize: "0.85rem",
+                textAlign: "center",
+                fontFamily: "Arial, sans-serif",
+                padding: "0.25rem 0",
+              }}
+            >
+              {authMode === "login" ? "No account? Sign up" : "Have an account? Sign in"}
+            </button>
           </div>
-
-          <button
-            onClick={handleAuth}
-            disabled={authLoading}
-            style={{ ...s.btnPrimary, opacity: authLoading ? 0.7 : 1 }}
-          >
-            {authLoading ? "Signing in…" : authMode === "login" ? "Sign In" : "Sign Up"}
-          </button>
-
-          <button
-            onClick={() => { setAuthMode(authMode === "login" ? "signup" : "login"); setAuthError(""); }}
-            style={s.authToggle}
-          >
-            {authMode === "login" ? "No account? Sign up" : "Have an account? Sign in"}
-          </button>
         </div>
       </div>
     );
@@ -609,7 +684,49 @@ export default function ProfessorView() {
   );
 }
 
-// ── Styles ─────────────────────────────────────────────────────────────
+// ── HdM login-page styles (white institutional theme) ─────────────────
+
+const hdmLabel: CSSProperties = {
+  display: "block",
+  fontSize: "0.72rem",
+  fontWeight: 700,
+  letterSpacing: "0.1em",
+  textTransform: "uppercase",
+  color: "#555",
+  marginBottom: "0.4rem",
+  fontFamily: "Arial, sans-serif",
+};
+
+const hdmInput: CSSProperties = {
+  display: "block",
+  width: "100%",
+  boxSizing: "border-box",
+  padding: "0.7rem 0.85rem",
+  border: "1px solid #ccc",
+  borderRadius: "2px",
+  fontSize: "0.95rem",
+  color: "#1a1a1a",
+  background: "white",
+  outline: "none",
+  fontFamily: "Arial, sans-serif",
+};
+
+const hdmBtn: CSSProperties = {
+  display: "block",
+  width: "100%",
+  padding: "0.75rem 1rem",
+  background: "#e30613",
+  color: "white",
+  border: "none",
+  borderRadius: "2px",
+  fontSize: "0.95rem",
+  fontWeight: 700,
+  cursor: "pointer",
+  fontFamily: "Arial, sans-serif",
+  letterSpacing: "0.02em",
+};
+
+// ── App styles (dark theme) ────────────────────────────────────────────
 
 const s: Record<string, CSSProperties> = {
   page: {

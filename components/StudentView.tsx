@@ -322,58 +322,116 @@ export default function StudentView() {
 
   if (stage === 1) {
     return (
-      <div style={s.pageCenter}>
-        <div style={s.joinCard}>
-          <div style={{ fontSize: "2.5rem", textAlign: "center" }}>🎯</div>
-          <h1 style={{ ...s.title, textAlign: "center", marginTop: "0.5rem" }}>
-            Join CampaignLab
-          </h1>
+      <div style={{
+        minHeight: "100vh",
+        background: "#efefef",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "2rem 1rem",
+      }}>
+        <div style={{
+          width: "100%",
+          maxWidth: "420px",
+          background: "white",
+          boxShadow: "0 4px 32px rgba(0,0,0,0.13)",
+          borderRadius: "2px",
+          overflow: "hidden",
+        }}>
+          {/* HdM green top bar for students */}
+          <div style={{ height: "5px", background: "#16a34a" }} />
 
-          {joinError && (
-            <div style={{ ...s.error, marginTop: "1rem" }}>{joinError}</div>
-          )}
-
-          <div style={{ ...s.field, marginTop: "1.25rem" }}>
-            <label style={s.label}>Team Name</label>
-            <input
-              type="text"
-              value={teamName}
-              onChange={(e) => setTeamName(e.target.value)}
-              placeholder="e.g. Team Alpha"
-              style={s.input}
-              onKeyDown={(e) => e.key === "Enter" && handleJoin()}
-            />
+          {/* Logo section */}
+          <div style={{ padding: "2rem 2.5rem 1.5rem", borderBottom: "1px solid #e8e8e8" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="https://hdm-stuttgart.de/_assets/08d436265eb2875b100f4b4e69dd70a4/Images/Logo/Logo-HdM_b.svg"
+                alt="Hochschule der Medien Stuttgart"
+                style={{ height: "50px" }}
+              />
+              <div style={{
+                fontSize: "2.4rem",
+                fontWeight: 900,
+                color: "#e30613",
+                fontStyle: "italic",
+                lineHeight: 1,
+                letterSpacing: "-0.03em",
+                fontFamily: "Arial Black, Arial, sans-serif",
+              }}>
+                SMM
+              </div>
+            </div>
+            <p style={{
+              margin: "0.55rem 0 0 0",
+              fontSize: "0.68rem",
+              letterSpacing: "0.14em",
+              textTransform: "uppercase",
+              color: "#888",
+              fontFamily: "Arial, sans-serif",
+            }}>
+              Campaign Lab &middot; Student Access
+            </p>
           </div>
 
-          <div style={s.field}>
-            <label style={s.label}>Session Code</label>
-            <input
-              type="text"
-              value={sessionCode}
-              onChange={(e) => setSessionCode(e.target.value.toUpperCase().slice(0, 6))}
-              placeholder="e.g. ABC123"
-              maxLength={6}
+          {/* Form section */}
+          <div style={{ padding: "2rem 2.5rem 2.5rem" }}>
+            {joinError && (
+              <div style={{
+                background: "#fff0f0",
+                border: "1px solid #e30613",
+                borderRadius: "2px",
+                padding: "0.65rem 1rem",
+                color: "#e30613",
+                fontSize: "0.85rem",
+                marginBottom: "1.25rem",
+              }}>
+                {joinError}
+              </div>
+            )}
+
+            <div style={{ marginBottom: "1.1rem" }}>
+              <label style={hdmLabel}>Team Name</label>
+              <input
+                type="text"
+                value={teamName}
+                onChange={(e) => setTeamName(e.target.value)}
+                placeholder="e.g. Team Alpha"
+                style={hdmInput}
+                onKeyDown={(e) => e.key === "Enter" && handleJoin()}
+              />
+            </div>
+
+            <div style={{ marginBottom: "1.5rem" }}>
+              <label style={hdmLabel}>Session Code</label>
+              <input
+                type="text"
+                value={sessionCode}
+                onChange={(e) => setSessionCode(e.target.value.toUpperCase().slice(0, 6))}
+                placeholder="e.g. ABC123"
+                maxLength={6}
+                style={{
+                  ...hdmInput,
+                  fontFamily: "monospace",
+                  letterSpacing: "0.3em",
+                  fontSize: "1.1rem",
+                  textTransform: "uppercase",
+                }}
+                onKeyDown={(e) => e.key === "Enter" && handleJoin()}
+              />
+            </div>
+
+            <button
+              onClick={handleJoin}
+              disabled={joining || !teamName.trim() || sessionCode.length < 6}
               style={{
-                ...s.input,
-                fontFamily: "monospace",
-                letterSpacing: "0.25em",
-                fontSize: "1.1rem",
-                textTransform: "uppercase",
+                ...hdmBtnGreen,
+                opacity: joining || !teamName.trim() || sessionCode.length < 6 ? 0.5 : 1,
               }}
-              onKeyDown={(e) => e.key === "Enter" && handleJoin()}
-            />
+            >
+              {joining ? "Joining…" : "Join Session →"}
+            </button>
           </div>
-
-          <button
-            onClick={handleJoin}
-            disabled={joining || !teamName.trim() || sessionCode.length < 6}
-            style={{
-              ...s.btnGreen,
-              opacity: joining || !teamName.trim() || sessionCode.length < 6 ? 0.5 : 1,
-            }}
-          >
-            {joining ? "Joining…" : "Join Session →"}
-          </button>
         </div>
       </div>
     );
@@ -691,7 +749,49 @@ export default function StudentView() {
   );
 }
 
-// ── Styles ─────────────────────────────────────────────────────────────
+// ── HdM login-page styles (white institutional theme) ─────────────────
+
+const hdmLabel: CSSProperties = {
+  display: "block",
+  fontSize: "0.72rem",
+  fontWeight: 700,
+  letterSpacing: "0.1em",
+  textTransform: "uppercase",
+  color: "#555",
+  marginBottom: "0.4rem",
+  fontFamily: "Arial, sans-serif",
+};
+
+const hdmInput: CSSProperties = {
+  display: "block",
+  width: "100%",
+  boxSizing: "border-box",
+  padding: "0.7rem 0.85rem",
+  border: "1px solid #ccc",
+  borderRadius: "2px",
+  fontSize: "0.95rem",
+  color: "#1a1a1a",
+  background: "white",
+  outline: "none",
+  fontFamily: "Arial, sans-serif",
+};
+
+const hdmBtnGreen: CSSProperties = {
+  display: "block",
+  width: "100%",
+  padding: "0.75rem 1rem",
+  background: "#16a34a",
+  color: "white",
+  border: "none",
+  borderRadius: "2px",
+  fontSize: "0.95rem",
+  fontWeight: 700,
+  cursor: "pointer",
+  fontFamily: "Arial, sans-serif",
+  letterSpacing: "0.02em",
+};
+
+// ── App styles (dark theme) ────────────────────────────────────────────
 
 const s: Record<string, CSSProperties> = {
   pageCenter: {
