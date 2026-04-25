@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase";
 import type { Session, Team, Reflection } from "@/lib/types";
 import Leaderboard from "@/components/Leaderboard";
 import CurveballPanel from "@/components/CurveballPanel";
+import HdMHeader from "@/components/HdMHeader";
 import { toast } from "@/components/Toast";
 
 // ── Utilities ──────────────────────────────────────────────────────────
@@ -109,6 +110,9 @@ export default function ProfessorView() {
   const [reflections, setReflections] = useState<Reflection[]>([]);
   const [highlightingId, setHighlightingId] = useState<string | null>(null);
 
+  // Stage 3 — Top results for KPI cards
+  const [topResults, setTopResults] = useState<{ roi: number; reach: number; engagement_rate: number } | null>(null);
+
   // UI
   const [showCurveball, setShowCurveball] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -203,6 +207,17 @@ export default function ProfessorView() {
     };
 
     fetchReflections();
+
+    // Fetch top results for KPI cards
+    supabase
+      .from("results")
+      .select("roi, reach, engagement_rate")
+      .eq("session_id", session.id)
+      .order("roi", { ascending: false })
+      .limit(1)
+      .single()
+      .then(({ data }) => { if (data) setTopResults(data as { roi: number; reach: number; engagement_rate: number }); });
+
     const ch = supabase
       .channel(`reflections-${session.id}`)
       .on("postgres_changes", {
@@ -717,106 +732,198 @@ export default function ProfessorView() {
     );
   }
 
-  // ── STAGE 3 — Results Dashboard ────────────────────────────────────────
+  // ── STAGE 3 — Results Dashboard (White Professional Layout) ─────────────
 
   const teamCount = teams.length;
   const reflCount = reflections.length;
 
+  const kpiCards = [
+    { label: "Teams Competed", value: String(teamCount), unit: "", color: "#4f46e5", icon: "👥" },
+    { label: "Best ROI", value: topResults ? topResults.roi.toFixed(1) : "—", unit: "×", color: "#e30613", icon: "📈" },
+    { label: "Best Reach", value: topResults ? `${(topResults.reach / 1000).toFixed(0)}k` : "—", unit: " people", color: "#16a34a", icon: "👁" },
+    { label: "Reflections", value: `${reflCount}/${teamCount}`, unit: " teams", color: "#d97706", icon: "🧠" },
+  ];
+
   return (
-    <div style={s.page}>
-      <div style={s.header}>
-        <h1 style={s.title}>Simulation Complete!</h1>
-        <p style={s.muted}>Here are the results for your session.</p>
-      </div>
+    <div style={{ minHeight: "100vh", background: "#f4f5f7", fontFamily: "Arial, Helvetica, sans-serif" }}>
 
-      {session && <Leaderboard sessionId={session.id} />}
+      <HdMHeader
+        title="Campaign Lab"
+        subtitle="Simulation Results"
+        badge="Complete"
+        right={
+          <>
+            <button onClick={downloadCSV} style={lb.hBtn}>📥 Export CSV</button>
+            <button onClick={() => window.print()} style={lb.hBtn}>🖨 Print</button>
+            <button onClick={handleReset} style={{ ...lb.hBtn, color: "#e30613", borderColor: "#e30613" }}>
+              🔄 New Session
+            </button>
+          </>
+        }
+      />
 
-      <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
-        <button onClick={downloadCSV} style={{ ...s.btnOutline, flex: 1, minWidth: "180px" }}>
-          📥 Download Results CSV
-        </button>
-        <button onClick={handleReset} style={{ ...s.btnDanger, flex: 1, minWidth: "180px" }}>
-          🔄 Reset Session
-        </button>
-      </div>
+      <div style={{ padding: "1.75rem 2rem 3rem", maxWidth: "1280px", margin: "0 auto" }}>
 
-      {/* ── Class Reflections Panel ── */}
-      <div style={s.card}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "0.75rem", marginBottom: "1.25rem" }}>
-          <div>
-            <h2 style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--text)", margin: "0 0 0.2rem 0" }}>
-              Class Reflections 🧠
-            </h2>
-            <p style={{ ...s.muted, fontSize: "0.8rem" }}>
-              {reflCount} of {teamCount} team{teamCount !== 1 ? "s" : ""} reflected
-            </p>
-          </div>
-          <button
-            onClick={() => window.print()}
-            style={{ ...s.btnOutline, fontSize: "0.82rem", padding: "0.5rem 1rem" }}
-          >
-            🖨 Export All as PDF
-          </button>
+        {/* Page heading */}
+        <div style={{ marginBottom: "1.5rem" }}>
+          <h1 style={{ fontSize: "1.4rem", fontWeight: 700, color: "#1a1a1a", margin: "0 0 0.2rem 0" }}>
+            Simulation Complete — Results Overview
+          </h1>
+          <p style={{ color: "#777", margin: 0, fontSize: "0.82rem" }}>
+            {session?.brand_name} &middot; {session?.industry} &middot; {session?.objective} &middot; Session&nbsp;
+            <strong style={{ fontFamily: "monospace", color: "#1a1a1a" }}>{session?.session_code}</strong>
+          </p>
         </div>
 
-        {reflections.length === 0 ? (
-          <p style={{ ...s.muted, textAlign: "center", padding: "2rem 0", fontSize: "0.875rem" }}>
-            Waiting for students to submit reflections…
-          </p>
-        ) : (
+        {/* KPI cards */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))", gap: "1rem", marginBottom: "1.5rem" }}>
+          {kpiCards.map((k) => (
+            <div key={k.label} style={{
+              background: "white",
+              borderRadius: "8px",
+              padding: "1.25rem 1.5rem",
+              boxShadow: "0 1px 3px rgba(0,0,0,0.07)",
+              borderLeft: `4px solid ${k.color}`,
+            }}>
+              <p style={{ fontSize: "0.7rem", fontWeight: 700, color: "#999", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 0.4rem 0" }}>
+                {k.icon} {k.label}
+              </p>
+              <p style={{ fontSize: "1.75rem", fontWeight: 700, color: k.color, margin: 0, lineHeight: 1 }}>
+                {k.value}
+                <span style={{ fontSize: "0.85rem", fontWeight: 400, color: "#999" }}>{k.unit}</span>
+              </p>
+            </div>
+          ))}
+        </div>
+
+        {/* Main two-column layout */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 340px", gap: "1.5rem", alignItems: "start" }}>
+
+          {/* Left — Leaderboard (light vars override) */}
+          <div style={{
+            background: "white",
+            borderRadius: "8px",
+            padding: "1.5rem",
+            boxShadow: "0 1px 3px rgba(0,0,0,0.07)",
+          }}>
+            <h2 style={{ fontSize: "1rem", fontWeight: 700, color: "#1a1a1a", margin: "0 0 1.25rem 0", borderLeft: "3px solid #e30613", paddingLeft: "0.65rem" }}>
+              Team Rankings
+            </h2>
+            <div style={{
+              "--card": "#ffffff",
+              "--surface": "#f8f9fa",
+              "--border": "#e8e8e8",
+              "--text": "#1a1a1a",
+              "--muted": "#777777",
+              "--bg": "#f4f5f7",
+              "--accent": "#4f46e5",
+              "--green": "#16a34a",
+              "--amber": "#d97706",
+              "--red": "#e30613",
+            } as React.CSSProperties}>
+              {session && <Leaderboard sessionId={session.id} />}
+            </div>
+          </div>
+
+          {/* Right — Session brief + Reflections sidebar */}
           <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
-            {reflections.map((r) => (
-              <div key={r.id} style={{
-                background: "var(--surface)",
-                border: "1px solid var(--border)",
-                borderRadius: "10px",
-                padding: "1.25rem",
-              }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1rem", flexWrap: "wrap", gap: "0.5rem" }}>
-                  <span style={{ fontWeight: 700, color: "var(--text)", fontSize: "0.9rem" }}>
-                    {r.team_name}
-                  </span>
-                  <button
-                    onClick={() => handleHighlight(r)}
-                    disabled={highlightingId === r.id}
-                    style={{
-                      background: "rgba(167,139,250,0.15)",
-                      color: "var(--accent)",
-                      border: "1px solid var(--accent)",
-                      borderRadius: "6px",
-                      padding: "0.3rem 0.75rem",
-                      fontSize: "0.75rem",
-                      fontWeight: 600,
-                      cursor: "pointer",
-                      fontFamily: "inherit",
-                      opacity: highlightingId === r.id ? 0.5 : 1,
-                    }}
-                  >
-                    {highlightingId === r.id ? "Highlighting…" : "✨ Highlight"}
-                  </button>
+
+            {/* Session brief card */}
+            <div style={{ background: "white", borderRadius: "8px", padding: "1.25rem", boxShadow: "0 1px 3px rgba(0,0,0,0.07)" }}>
+              <h3 style={{ fontSize: "0.85rem", fontWeight: 700, color: "#1a1a1a", margin: "0 0 1rem 0", borderLeft: "3px solid #e30613", paddingLeft: "0.6rem" }}>
+                Session Brief
+              </h3>
+              {[
+                { label: "Brand", value: session?.brand_name ?? "" },
+                { label: "Industry", value: session?.industry ?? "" },
+                { label: "Objective", value: session?.objective ?? "" },
+                { label: "Budget", value: "€10,000 virtual" },
+                { label: "Client", value: (session?.client_personality ?? "").split("—")[0].trim() },
+              ].map(({ label, value }) => (
+                <div key={label} style={{ display: "flex", justifyContent: "space-between", padding: "0.4rem 0", borderBottom: "1px solid #f0f0f0" }}>
+                  <span style={{ fontSize: "0.75rem", color: "#999", textTransform: "uppercase", letterSpacing: "0.06em" }}>{label}</span>
+                  <span style={{ fontSize: "0.8rem", fontWeight: 600, color: "#1a1a1a", textAlign: "right", maxWidth: "55%" }}>{value}</span>
                 </div>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "0.75rem" }}>
-                  {[
-                    { label: "Biggest mistake", text: r.biggest_mistake },
-                    { label: "Winning insight", text: r.winning_insight },
-                    { label: "Biggest surprise", text: r.biggest_surprise },
-                  ].map(({ label, text }) => (
-                    <div key={label}>
-                      <p style={{ fontSize: "0.65rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 0.3rem 0" }}>{label}</p>
-                      <p style={{ fontSize: "0.82rem", color: "var(--text)", lineHeight: 1.5, margin: 0 }}>
-                        {text || <span style={{ color: "var(--muted)", fontStyle: "italic" }}>—</span>}
+              ))}
+            </div>
+
+            {/* Reflections summary card */}
+            <div style={{ background: "white", borderRadius: "8px", padding: "1.25rem", boxShadow: "0 1px 3px rgba(0,0,0,0.07)" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.85rem" }}>
+                <h3 style={{ fontSize: "0.85rem", fontWeight: 700, color: "#1a1a1a", margin: 0, borderLeft: "3px solid #d97706", paddingLeft: "0.6rem" }}>
+                  Class Reflections
+                </h3>
+                <span style={{ fontSize: "0.72rem", background: reflCount > 0 ? "#fef3c7" : "#f3f4f6", color: reflCount > 0 ? "#d97706" : "#999", padding: "2px 8px", borderRadius: "99px", fontWeight: 700 }}>
+                  {reflCount}/{teamCount}
+                </span>
+              </div>
+              <button onClick={() => window.print()} style={{ ...lb.hBtn, width: "100%", justifyContent: "center", display: "flex", marginBottom: "0.75rem" }}>
+                🖨 Export All as PDF
+              </button>
+              {reflections.length === 0 ? (
+                <p style={{ fontSize: "0.78rem", color: "#999", textAlign: "center", padding: "0.75rem 0", margin: 0 }}>
+                  Waiting for student reflections…
+                </p>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem", maxHeight: "320px", overflowY: "auto" }}>
+                  {reflections.map((r) => (
+                    <div key={r.id} style={{ background: "#f8f9fa", borderRadius: "6px", padding: "0.75rem" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
+                        <span style={{ fontSize: "0.78rem", fontWeight: 700, color: "#1a1a1a" }}>{r.team_name}</span>
+                        <button
+                          onClick={() => handleHighlight(r)}
+                          disabled={highlightingId === r.id}
+                          style={{
+                            background: "transparent",
+                            border: "1px solid #4f46e5",
+                            color: "#4f46e5",
+                            borderRadius: "4px",
+                            padding: "1px 8px",
+                            fontSize: "0.68rem",
+                            fontWeight: 700,
+                            cursor: "pointer",
+                            fontFamily: "inherit",
+                            opacity: highlightingId === r.id ? 0.5 : 1,
+                          }}
+                        >
+                          ✨ Highlight
+                        </button>
+                      </div>
+                      <p style={{ fontSize: "0.75rem", color: "#555", margin: "0 0 0.25rem 0", lineHeight: 1.4 }}>
+                        <strong>Mistake:</strong> {r.biggest_mistake || "—"}
+                      </p>
+                      <p style={{ fontSize: "0.75rem", color: "#555", margin: 0, lineHeight: 1.4 }}>
+                        <strong>Insight:</strong> {r.winning_insight || "—"}
                       </p>
                     </div>
                   ))}
                 </div>
-              </div>
-            ))}
+              )}
+            </div>
+
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
 }
+
+// ── Light dashboard button style ──────────────────────────────────────
+
+const lb = {
+  hBtn: {
+    background: "white",
+    border: "1px solid #d0d0d0",
+    borderRadius: "6px",
+    padding: "0.4rem 0.85rem",
+    fontSize: "0.78rem",
+    fontWeight: 600,
+    color: "#444",
+    cursor: "pointer",
+    fontFamily: "Arial, sans-serif",
+    whiteSpace: "nowrap",
+  } as CSSProperties,
+};
 
 // ── HdM login-page styles (white institutional theme) ─────────────────
 

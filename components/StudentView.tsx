@@ -1,10 +1,11 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect, useMemo, useRef } from "react";
 import type { CSSProperties } from "react";
 import { createClient } from "@/lib/supabase";
 import type { Session, SimulationResult, Platform, HighlightedReflection } from "@/lib/types";
 import ScoreCard from "@/components/ScoreCard";
+import HdMHeader from "@/components/HdMHeader";
 import { toast } from "@/components/Toast";
 
 // ── Constants ──────────────────────────────────────────────────────────
@@ -28,22 +29,6 @@ const FORMAT_OPTIONS = ["Reels-heavy", "Carousel-heavy", "Mixed formats", "Stati
 
 // ── Sub-components ─────────────────────────────────────────────────────
 
-function BriefBadge({ label, color }: { label: string; color: string }) {
-  return (
-    <span style={{
-      padding: "0.3rem 0.65rem",
-      borderRadius: "6px",
-      fontSize: "0.75rem",
-      fontWeight: 600,
-      color,
-      background: "rgba(255,255,255,0.05)",
-      border: `1px solid ${color}`,
-      whiteSpace: "nowrap",
-    }}>
-      {label}
-    </span>
-  );
-}
 
 function PulsingDots() {
   const [count, setCount] = useState(1);
@@ -467,7 +452,7 @@ export default function StudentView() {
     );
   }
 
-  // ── STAGE 2 — Strategy Builder ────────────────────────────────────────
+  // ── STAGE 2 — Strategy Builder (White Professional Layout) ─────────────
 
   if (stage === 2 && session) {
     const mins = String(Math.floor((timeLeft ?? 0) / 60)).padStart(2, "0");
@@ -486,266 +471,131 @@ export default function StudentView() {
           }
         `}</style>
 
-        <div style={{ minHeight: "100vh", background: "var(--bg)" }}>
+        <div style={{ minHeight: "100vh", background: "#f4f5f7", fontFamily: "Arial, Helvetica, sans-serif" }}>
 
-          {/* ── Curveball banner ── */}
+          <HdMHeader
+            title="Campaign Lab"
+            subtitle={`Strategy Builder — ${session.brand_name}`}
+            right={
+              <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                <div style={{
+                  display: "flex", alignItems: "center", gap: "0.5rem",
+                  background: urgent ? "#fef2f2" : "#f0fdf4",
+                  border: `1px solid ${urgent ? "#fca5a5" : "#86efac"}`,
+                  borderRadius: "6px", padding: "0.3rem 0.85rem",
+                }}>
+                  <span style={{ fontSize: "0.62rem", fontWeight: 700, color: urgent ? "#dc2626" : "#16a34a", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                    Time
+                  </span>
+                  <span style={{ fontFamily: "monospace", fontWeight: 700, fontSize: "1rem", color: urgent ? "#dc2626" : "#16a34a" }}>
+                    {mins}:{secs}
+                  </span>
+                </div>
+                <div style={{ fontSize: "0.78rem", fontWeight: 600, color: "#555", background: "white", border: "1px solid #e0e0e0", borderRadius: "6px", padding: "0.3rem 0.75rem" }}>
+                  {teamName}
+                </div>
+              </div>
+            }
+          />
+
           {curveball && (
-            <div style={{
-              background: flashOn ? "#e30613" : "#9c0410",
-              color: "white",
-              padding: "0.9rem 1.5rem",
-              textAlign: "center",
-              fontWeight: 700,
-              fontSize: "1rem",
-              letterSpacing: "0.01em",
-              position: "sticky",
-              top: 0,
-              zIndex: 200,
-            }}>
-              🚨 BREAKING: {curveball.message}
+            <div style={{ background: flashOn ? "#e30613" : "#9c0410", color: "white", padding: "0.75rem 2rem", textAlign: "center", fontWeight: 700, fontSize: "0.95rem" }}>
+              BREAKING: {curveball.message}
             </div>
           )}
 
-          <div style={s.page}>
+          <div style={{ padding: "1.5rem 2rem 3rem", maxWidth: "1200px", margin: "0 auto" }}>
 
-            {/* Brief */}
-            <div style={s.card}>
-              <p style={{ ...s.label, marginBottom: "0.65rem" }}>Campaign Brief</p>
-              <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-                <BriefBadge label={session.brand_name} color="var(--accent)" />
-                <BriefBadge label={session.industry} color="var(--amber)" />
-                <BriefBadge label={session.objective} color="var(--green)" />
-                <BriefBadge label="€10,000" color="var(--muted)" />
-                <BriefBadge
-                  label={session.client_personality.split("—")[0].trim()}
-                  color="var(--red)"
-                />
-              </div>
+            <div style={{ background: "white", borderRadius: "8px", padding: "0.9rem 1.5rem", marginBottom: "1.25rem", boxShadow: "0 1px 3px rgba(0,0,0,0.07)", display: "flex", alignItems: "center", gap: "1rem", flexWrap: "wrap", borderLeft: "4px solid #e30613" }}>
+              <span style={{ fontSize: "0.62rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "#e30613", flexShrink: 0 }}>Brief</span>
+              {[
+                { label: session.brand_name, color: "#1a1a1a", bg: "#f5f5f5" },
+                { label: session.industry, color: "#444", bg: "#f5f5f5" },
+                { label: session.objective, color: "#16a34a", bg: "#f0fdf4" },
+                { label: "EUR 10,000 budget", color: "#444", bg: "#f9fafb" },
+                { label: session.client_personality.split("—")[0].trim(), color: "#dc2626", bg: "#fef2f2" },
+              ].map(({ label, color, bg }) => (
+                <span key={label} style={{ fontSize: "0.75rem", fontWeight: 600, color, background: bg, padding: "3px 10px", borderRadius: "4px", border: "1px solid #e8e8e8" }}>{label}</span>
+              ))}
             </div>
 
-            {/* Countdown */}
-            <div style={{
-              ...s.card,
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}>
-              <p style={s.label}>Time Remaining</p>
-              <span style={{
-                fontFamily: "monospace",
-                fontSize: "2rem",
-                fontWeight: 700,
-                color: urgent ? "var(--red)" : "var(--green)",
-              }}>
-                {mins}:{secs}
-              </span>
-            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.25rem", alignItems: "start" }}>
 
-            {/* ── Section 1: Platform allocation ── */}
-            <div style={s.card}>
-              <p style={s.sectionTitle}>1 — Platform Budget Allocation</p>
-              <div style={{ display: "flex", flexDirection: "column", gap: "0.85rem", marginTop: "1rem" }}>
-                {PLATFORMS.map((p, i) => (
-                  <div key={p.name} style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-                    <span style={{
-                      width: "118px",
-                      fontSize: "0.875rem",
-                      color: "var(--text)",
-                      flexShrink: 0,
-                    }}>
-                      {p.emoji} {p.name}
-                    </span>
-                    <input
-                      type="range"
-                      min={0}
-                      max={100}
-                      step={5}
-                      value={platforms[i].budget_percent}
-                      onChange={(e) => {
-                        const v = Number(e.target.value);
-                        setPlatforms((prev) =>
-                          prev.map((pl, idx) =>
-                            idx === i ? { ...pl, budget_percent: v } : pl
-                          )
-                        );
-                      }}
-                      style={{ flex: 1, accentColor: "var(--accent)", cursor: "pointer" }}
-                    />
-                    <span style={{
-                      width: "42px",
-                      textAlign: "right",
-                      fontFamily: "monospace",
-                      fontWeight: 700,
-                      fontSize: "0.9rem",
-                      color: "var(--text)",
-                    }}>
-                      {platforms[i].budget_percent}%
-                    </span>
+              <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+
+                <div style={wb.card}>
+                  <h3 style={wb.sectionHead}><span style={wb.stepBadge}>1</span> Platform Budget Allocation</h3>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "0.9rem", marginTop: "1rem" }}>
+                    {PLATFORMS.map((p, i) => (
+                      <div key={p.name} style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                        <span style={{ width: "115px", fontSize: "0.8rem", color: "#333", flexShrink: 0, fontWeight: 500 }}>{p.emoji} {p.name}</span>
+                        <input type="range" min={0} max={100} step={5} value={platforms[i].budget_percent}
+                          onChange={(e) => { const v = Number(e.target.value); setPlatforms((prev) => prev.map((pl, idx) => idx === i ? { ...pl, budget_percent: v } : pl)); }}
+                          style={{ flex: 1, accentColor: "#e30613", cursor: "pointer" }} />
+                        <span style={{ width: "40px", textAlign: "right", fontFamily: "monospace", fontWeight: 700, fontSize: "0.875rem", color: "#1a1a1a" }}>{platforms[i].budget_percent}%</span>
+                      </div>
+                    ))}
                   </div>
-                ))}
+                  <div style={{ marginTop: "1rem", padding: "0.55rem 1rem", borderRadius: "6px", textAlign: "center", fontWeight: 700, fontSize: "0.8rem", background: budgetTotal === 100 ? "#f0fdf4" : "#fef2f2", border: `1px solid ${budgetTotal === 100 ? "#86efac" : "#fca5a5"}`, color: budgetTotal === 100 ? "#16a34a" : "#dc2626" }}>
+                    {budgetTotal === 100 ? "Total: 100% — Perfect" : `Total: ${budgetTotal}% (must equal 100%)`}
+                  </div>
+                </div>
+
+                <div style={wb.card}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <h3 style={wb.sectionHead}><span style={wb.stepBadge}>2</span> Content Pillars</h3>
+                    <span style={{ fontSize: "0.75rem", fontWeight: 700, color: pillars.length === 3 ? "#16a34a" : "#999" }}>{pillars.length}/3</span>
+                  </div>
+                  <div ref={pillarGridRef} style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem", marginTop: "0.85rem" }}>
+                    {PILLAR_OPTIONS.map((pillar) => {
+                      const sel = pillars.includes(pillar);
+                      return (
+                        <button key={pillar} onClick={() => handlePillarToggle(pillar)} style={{ padding: "0.5rem 0.65rem", borderRadius: "4px", border: `1px solid ${sel ? "#e30613" : "#e0e0e0"}`, background: sel ? "#fef2f2" : "white", color: sel ? "#e30613" : "#555", fontSize: "0.75rem", fontWeight: sel ? 700 : 400, cursor: "pointer", fontFamily: "Arial, sans-serif", textAlign: "left" }}>
+                          {sel ? "checkmark " : ""}{pillar}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {pillarError && <p style={{ color: "#dc2626", fontSize: "0.75rem", fontWeight: 600, margin: "0.5rem 0 0 0" }}>Max 3 pillars</p>}
+                </div>
+
               </div>
 
-              {/* Budget total indicator */}
-              <div style={{
-                marginTop: "1rem",
-                padding: "0.6rem 1rem",
-                borderRadius: "8px",
-                textAlign: "center",
-                fontWeight: 700,
-                fontSize: "0.875rem",
-                background: budgetTotal === 100
-                  ? "rgba(52,211,153,0.1)"
-                  : "rgba(248,113,113,0.1)",
-                border: `1px solid ${budgetTotal === 100
-                  ? "rgba(52,211,153,0.35)"
-                  : "rgba(248,113,113,0.35)"}`,
-                color: budgetTotal === 100 ? "var(--green)" : "var(--red)",
-              }}>
-                {budgetTotal === 100
-                  ? "✓ Total: 100% — Perfect allocation"
-                  : `Total: ${budgetTotal}% (must be exactly 100%)`}
-              </div>
-            </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
 
-            {/* ── Section 2: Content pillars ── */}
-            <div style={s.card}>
-              <div style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                flexWrap: "wrap",
-                gap: "0.5rem",
-              }}>
-                <p style={s.sectionTitle}>2 — Content Pillars</p>
-                <span style={{
-                  fontSize: "0.82rem",
-                  fontWeight: 700,
-                  color: pillars.length === 3 ? "var(--green)" : "var(--muted)",
-                }}>
-                  {pillars.length}/3 selected
-                </span>
-              </div>
+                <div style={wb.card}>
+                  <h3 style={wb.sectionHead}><span style={wb.stepBadge}>3</span> Target Demographic</h3>
+                  <select value={demographic} onChange={(e) => setDemographic(e.target.value)} style={{ ...wb.select, marginTop: "0.75rem" }}>
+                    {DEMOGRAPHIC_OPTIONS.map((d) => <option key={d}>{d}</option>)}
+                  </select>
+                </div>
 
-              <div
-                ref={pillarGridRef}
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))",
-                  gap: "0.6rem",
-                  marginTop: "0.85rem",
-                }}
-              >
-                {PILLAR_OPTIONS.map((pillar) => {
-                  const selected = pillars.includes(pillar);
-                  return (
-                    <button
-                      key={pillar}
-                      onClick={() => handlePillarToggle(pillar)}
-                      style={{
-                        padding: "0.55rem 0.75rem",
-                        borderRadius: "8px",
-                        border: `1px solid ${selected ? "var(--accent)" : "var(--border)"}`,
-                        background: selected ? "rgba(167,139,250,0.15)" : "transparent",
-                        color: selected ? "var(--accent)" : "var(--muted)",
-                        fontSize: "0.82rem",
-                        fontWeight: selected ? 600 : 400,
-                        cursor: "pointer",
-                        fontFamily: "inherit",
-                        transition: "all 0.15s",
-                        textAlign: "left",
-                      }}
-                    >
-                      {selected ? "✓ " : ""}{pillar}
-                    </button>
-                  );
-                })}
-              </div>
+                <div style={wb.card}>
+                  <h3 style={wb.sectionHead}><span style={wb.stepBadge}>4</span> Posting Frequency</h3>
+                  <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", marginTop: "0.75rem" }}>
+                    {FREQUENCY_OPTIONS.map((f) => (
+                      <button key={f} onClick={() => setFrequency(f)} style={{ padding: "0.45rem 0.9rem", borderRadius: "4px", border: `1px solid ${frequency === f ? "#e30613" : "#e0e0e0"}`, background: frequency === f ? "#e30613" : "white", color: frequency === f ? "white" : "#555", fontWeight: frequency === f ? 700 : 400, fontSize: "0.78rem", cursor: "pointer", fontFamily: "Arial, sans-serif" }}>{f}</button>
+                    ))}
+                  </div>
+                </div>
 
-              {pillarError && (
-                <p style={{
-                  color: "var(--red)",
-                  fontSize: "0.8rem",
-                  fontWeight: 600,
-                  marginTop: "0.6rem",
-                  marginBottom: 0,
-                }}>
-                  ⚠ {pillarError}
-                </p>
-              )}
-            </div>
+                <div style={wb.card}>
+                  <h3 style={wb.sectionHead}><span style={wb.stepBadge}>5</span> Creative Format Mix</h3>
+                  <select value={format} onChange={(e) => setFormat(e.target.value)} style={{ ...wb.select, marginTop: "0.75rem" }}>
+                    {FORMAT_OPTIONS.map((f) => <option key={f}>{f}</option>)}
+                  </select>
+                </div>
 
-            {/* ── Section 3: Target demographic ── */}
-            <div style={s.card}>
-              <p style={s.sectionTitle}>3 — Target Demographic</p>
-              <select
-                value={demographic}
-                onChange={(e) => setDemographic(e.target.value)}
-                style={{ ...s.select, marginTop: "0.75rem" }}
-              >
-                {DEMOGRAPHIC_OPTIONS.map((d) => <option key={d}>{d}</option>)}
-              </select>
-            </div>
-
-            {/* ── Section 4: Posting frequency ── */}
-            <div style={s.card}>
-              <p style={s.sectionTitle}>4 — Posting Frequency</p>
-              <div style={{ display: "flex", gap: "0.6rem", flexWrap: "wrap", marginTop: "0.75rem" }}>
-                {FREQUENCY_OPTIONS.map((f) => (
-                  <button
-                    key={f}
-                    onClick={() => setFrequency(f)}
-                    style={{
-                      padding: "0.5rem 1rem",
-                      borderRadius: "99px",
-                      border: `1px solid ${frequency === f ? "var(--accent)" : "var(--border)"}`,
-                      background: frequency === f ? "rgba(167,139,250,0.15)" : "transparent",
-                      color: frequency === f ? "var(--accent)" : "var(--muted)",
-                      fontWeight: frequency === f ? 600 : 400,
-                      fontSize: "0.85rem",
-                      cursor: "pointer",
-                      fontFamily: "inherit",
-                      transition: "all 0.15s",
-                    }}
-                  >
-                    {f}
+                <div style={{ ...wb.card, background: canSubmit ? "#f0fdf4" : "#f9fafb", border: `1px solid ${canSubmit ? "#86efac" : "#e8e8e8"}` }}>
+                  {submitHint && <p style={{ fontSize: "0.75rem", color: "#999", textAlign: "center", margin: "0 0 0.75rem 0" }}>{submitHint}</p>}
+                  {submitError && <div style={{ background: "#fef2f2", border: "1px solid #fca5a5", borderRadius: "6px", padding: "0.6rem 1rem", color: "#dc2626", fontSize: "0.8rem", marginBottom: "0.75rem" }}>{submitError}</div>}
+                  <button onClick={handleSubmit} disabled={!canSubmit || submitting} style={{ display: "block", width: "100%", padding: "0.85rem", background: canSubmit ? "#16a34a" : "#e0e0e0", color: canSubmit ? "white" : "#999", border: "none", borderRadius: "6px", fontSize: "0.95rem", fontWeight: 700, cursor: canSubmit ? "pointer" : "not-allowed", fontFamily: "Arial, sans-serif" }}>
+                    {submitting ? "Submitting..." : "Submit Strategy"}
                   </button>
-                ))}
+                </div>
+
               </div>
             </div>
-
-            {/* ── Section 5: Creative format ── */}
-            <div style={s.card}>
-              <p style={s.sectionTitle}>5 — Creative Format Mix</p>
-              <select
-                value={format}
-                onChange={(e) => setFormat(e.target.value)}
-                style={{ ...s.select, marginTop: "0.75rem" }}
-              >
-                {FORMAT_OPTIONS.map((f) => <option key={f}>{f}</option>)}
-              </select>
-            </div>
-
-            {/* Submit */}
-            {submitHint && (
-              <p style={{ ...s.muted, textAlign: "center", fontSize: "0.8rem" }}>
-                {submitHint}
-              </p>
-            )}
-            {submitError && <div style={s.error}>{submitError}</div>}
-
-            <button
-              onClick={handleSubmit}
-              disabled={!canSubmit || submitting}
-              style={{
-                ...s.btnGreen,
-                opacity: !canSubmit || submitting ? 0.4 : 1,
-                cursor: !canSubmit ? "not-allowed" : "pointer",
-                fontSize: "1rem",
-                padding: "1rem 1.5rem",
-              }}
-            >
-              {submitting ? "Submitting…" : "Submit Strategy 🚀"}
-            </button>
           </div>
         </div>
       </>
@@ -874,6 +724,54 @@ export default function StudentView() {
     </>
   );
 }
+
+// ── White board (wb) styles — used in Stage 2 professional layout ──────
+
+const wb = {
+  card: {
+    background: "white",
+    borderRadius: "8px",
+    padding: "1.25rem 1.5rem",
+    boxShadow: "0 1px 3px rgba(0,0,0,0.07)",
+  } as CSSProperties,
+  sectionHead: {
+    fontSize: "0.875rem",
+    fontWeight: 700,
+    color: "#1a1a1a",
+    margin: 0,
+    display: "flex",
+    alignItems: "center",
+    gap: "0.5rem",
+    fontFamily: "Arial, sans-serif",
+  } as CSSProperties,
+  stepBadge: {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    width: "22px",
+    height: "22px",
+    borderRadius: "50%",
+    background: "#e30613",
+    color: "white",
+    fontSize: "0.65rem",
+    fontWeight: 700,
+    flexShrink: 0,
+  } as CSSProperties,
+  select: {
+    display: "block",
+    width: "100%",
+    boxSizing: "border-box",
+    padding: "0.6rem 0.85rem",
+    border: "1px solid #e0e0e0",
+    borderRadius: "6px",
+    fontSize: "0.85rem",
+    color: "#1a1a1a",
+    background: "white",
+    outline: "none",
+    fontFamily: "Arial, sans-serif",
+    cursor: "pointer",
+  } as CSSProperties,
+};
 
 // ── HdM login-page styles (white institutional theme) ─────────────────
 
