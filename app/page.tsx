@@ -308,16 +308,6 @@ export default function Home() {
             >
               Nobelstrasse 10, 70569 Stuttgart
             </p>
-            <p
-              style={{
-                fontSize: "0.75rem",
-                color: "rgba(255,255,255,0.4)",
-                marginTop: "0.25rem",
-                marginBottom: 0,
-              }}
-            >
-              Built with Google Gemini AI &middot; Supabase &middot; Vercel
-            </p>
           </div>
         </div>
         <div
