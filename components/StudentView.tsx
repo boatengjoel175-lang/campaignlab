@@ -587,77 +587,82 @@ export default function StudentView() {
     );
   }
 
-  // ── STAGE 3 — Results (dark ScoreCard experience) ─────────────────────
+  // ── STAGE 3 — Results ─────────────────────────────────────────────────
 
-  return (
-    <>
-      {/* Professor-highlighted reflection banner */}
-      {highlightBanner && (
-        <div style={{
-          position: "fixed", top: 0, left: 0, right: 0,
-          background: "#e30613", color: "white",
-          padding: "1.25rem 2rem", zIndex: 300,
-          boxShadow: "0 4px 24px rgba(0,0,0,0.4)",
-        }}>
-          <p style={{ fontWeight: 700, fontSize: "0.72rem", letterSpacing: "0.1em", textTransform: "uppercase", margin: "0 0 0.5rem 0", opacity: 0.8 }}>
-            Professor Highlight — {highlightBanner.team_name}
-          </p>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "0.75rem" }}>
-            {[
-              { label: "Biggest mistake",  text: highlightBanner.biggest_mistake },
-              { label: "Winning insight",  text: highlightBanner.winning_insight },
-              { label: "Biggest surprise", text: highlightBanner.biggest_surprise },
-            ].map((item) => (
-              <div key={item.label}>
-                <p style={{ fontSize: "0.62rem", opacity: 0.7, textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 0.2rem 0" }}>{item.label}</p>
-                <p style={{ fontSize: "0.85rem", margin: 0 }}>{item.text}</p>
-              </div>
-            ))}
-          </div>
-          <button onClick={() => setHighlightBanner(null)} style={{ position: "absolute", top: "0.75rem", right: "1rem", background: "transparent", border: "none", color: "white", cursor: "pointer", fontSize: "1.1rem", opacity: 0.7 }}>x</button>
-        </div>
-      )}
-
-      <div style={{ background: "#09090b", minHeight: "100vh" }}>
+  // Waiting state: white HdM page with header
+  if (!showResult) {
+    return (
+      <div style={{ background: "#ffffff", minHeight: "100vh", fontFamily: "Arial, Helvetica, sans-serif" }}>
         <HdMHeader
           title="Campaign Lab"
-          subtitle={showResult ? "Your Results" : "Waiting for Simulation"}
+          subtitle="Waiting for Simulation"
           right={
             <div style={{ display: "flex", gap: "0.5rem" }}>
-              <button onClick={() => window.location.reload()} style={{ background: "white", border: "1px solid #d0d0d0", borderRadius: "6px", padding: "0.4rem 0.85rem", fontSize: "0.78rem", fontWeight: 600, color: "#444", cursor: "pointer", fontFamily: "Arial, sans-serif" }}>
+              <button onClick={() => window.location.reload()} style={{ background: "white", border: "1px solid #d0d0d0", borderRadius: "4px", padding: "0.4rem 0.85rem", fontSize: "0.78rem", fontWeight: 600, color: "#444", cursor: "pointer", fontFamily: "inherit" }}>
                 &#x21BA; Refresh
               </button>
-              <button onClick={() => { localStorage.removeItem("campaignlab_student"); setStage(1); setSession(null); setTeamId(null); setTeamName(""); setSessionCode(""); }} style={{ background: "white", border: "1px solid #e30613", borderRadius: "6px", padding: "0.4rem 0.85rem", fontSize: "0.78rem", fontWeight: 700, color: "#e30613", cursor: "pointer", fontFamily: "Arial, sans-serif" }}>
+              <button onClick={() => { localStorage.removeItem("campaignlab_student"); setStage(1); setSession(null); setTeamId(null); setTeamName(""); setSessionCode(""); }} style={{ background: "white", border: "1px solid #e30613", borderRadius: "4px", padding: "0.4rem 0.85rem", fontSize: "0.78rem", fontWeight: 700, color: "#e30613", cursor: "pointer", fontFamily: "inherit" }}>
                 &#x2192; Exit
               </button>
             </div>
           }
         />
-
-        {!showResult ? (
-          <div style={{ textAlign: "center", padding: "5rem 2rem", color: "#fafafa" }}>
-            <div style={{ fontSize: "3.5rem", marginBottom: "1rem" }}>&#x2705;</div>
-            <h2 style={{ fontSize: "1.5rem", fontWeight: 700, color: "#fafafa", margin: "0 0 0.5rem 0" }}>Strategy submitted!</h2>
-            <p style={{ color: "#71717a", margin: 0 }}>Waiting for professor to run simulation</p>
-            <PulsingDots />
+        <div style={{ maxWidth: "600px", margin: "0 auto", padding: "5rem 2rem", textAlign: "center" }}>
+          <div style={{ width: "48px", height: "48px", borderRadius: "50%", background: "#f5f5f5", border: "2px solid #e0e0e0", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 1.5rem" }}>
+            <span style={{ fontSize: "1.25rem" }}>&#x2705;</span>
           </div>
-        ) : result && session ? (
-          <ScoreCard
-            result={result}
-            teamName={teamName || "Your Team"}
-            teamId={teamId ?? ""}
-            sessionId={session.id}
-            scenario={{
-              brand_name:         session.brand_name,
-              industry:           session.industry,
-              objective:          session.objective,
-              client_personality: session.client_personality,
-            }}
-          />
-        ) : null}
+          <h2 style={{ fontSize: "1.4rem", fontWeight: 700, color: "#1a1a1a", margin: "0 0 0.5rem 0" }}>
+            Strategy submitted
+          </h2>
+          <p style={{ fontSize: "0.9rem", color: "#666666", margin: "0 0 0.5rem 0" }}>
+            Waiting for your professor to run the simulation.
+          </p>
+          <p style={{ fontSize: "0.82rem", color: "#999999", fontStyle: "italic", margin: 0 }}>
+            This page will update automatically when results are ready.
+          </p>
+          <PulsingDots />
+        </div>
+        {/* Footer strip */}
+        <footer style={{ background: "#1a1a1a", color: "white", padding: "1rem 2rem", marginTop: "auto" }}>
+          <div style={{ maxWidth: "1100px", margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.5rem" }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="https://hdm-stuttgart.de/_assets/08d436265eb2875b100f4b4e69dd70a4/Images/Logo/Logo-HdM_white.svg" alt="HdM" style={{ height: "24px" }} />
+            <p style={{ fontSize: "0.72rem", color: "rgba(255,255,255,0.4)", margin: 0 }}>&copy; 2025 Hochschule der Medien Stuttgart</p>
+          </div>
+        </footer>
       </div>
-    </>
-  );
+    );
+  }
+
+  // Results: full-page ScoreCard (has its own nav + footer)
+  if (result && session) {
+    return (
+      <>
+        {highlightBanner && (
+          <div style={{ position: "fixed", top: 0, left: 0, right: 0, background: "#e30613", color: "white", padding: "1rem 2rem", zIndex: 9999, boxShadow: "0 2px 8px rgba(0,0,0,0.2)" }}>
+            <p style={{ fontWeight: 700, fontSize: "0.72rem", letterSpacing: "0.1em", textTransform: "uppercase", margin: "0 0 0.4rem 0", opacity: 0.85 }}>
+              Professor Highlight &mdash; {highlightBanner.team_name}
+            </p>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "0.5rem" }}>
+              {[{l:"Biggest mistake",t:highlightBanner.biggest_mistake},{l:"Winning insight",t:highlightBanner.winning_insight},{l:"Biggest surprise",t:highlightBanner.biggest_surprise}].map(item => (
+                <div key={item.l}><p style={{ fontSize: "0.6rem", opacity: 0.7, textTransform: "uppercase", margin: "0 0 0.15rem 0" }}>{item.l}</p><p style={{ fontSize: "0.82rem", margin: 0 }}>{item.t}</p></div>
+              ))}
+            </div>
+            <button onClick={() => setHighlightBanner(null)} style={{ position: "absolute", top: "0.75rem", right: "1rem", background: "transparent", border: "none", color: "white", cursor: "pointer", fontSize: "1rem", opacity: 0.7 }}>x</button>
+          </div>
+        )}
+        <ScoreCard
+          result={result}
+          teamName={teamName || "Your Team"}
+          teamId={teamId ?? ""}
+          sessionId={session.id}
+          scenario={{ brand_name: session.brand_name, industry: session.industry, objective: session.objective, client_personality: session.client_personality }}
+        />
+      </>
+    );
+  }
+
+  return null;
 }
 
 // ── White board (wb) styles — used in Stage 2 professional layout ──────
