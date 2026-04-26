@@ -218,8 +218,16 @@ export default function ScoreCard({ result, teamName, teamId, sessionId, scenari
           <div style={{ width: "1px", height: "32px", background: "#e0e0e0" }} />
           <span style={{ fontSize: "1rem", fontWeight: 600, color: "#1a1a1a" }}>SMM Campaign Lab</span>
         </div>
-        <div style={{ background: "#f5f5f5", border: "1px solid #e0e0e0", fontSize: "0.75rem", color: "#666666", padding: "4px 12px", borderRadius: "4px" }}>
-          Powered by Google Gemini AI
+        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+          <div style={{ background: "#f5f5f5", border: "1px solid #e0e0e0", fontSize: "0.75rem", color: "#666666", padding: "4px 12px", borderRadius: "4px" }}>
+            Powered by Google Gemini AI
+          </div>
+          <button
+            onClick={() => { localStorage.removeItem("campaignlab_student"); window.location.href = "/student"; }}
+            style={{ background: "white", border: "1px solid #e30613", borderRadius: "4px", padding: "5px 14px", fontSize: "0.78rem", fontWeight: 700, color: "#e30613", cursor: "pointer", fontFamily: "inherit" }}
+          >
+            &#x2192; Sign Out
+          </button>
         </div>
       </nav>
 
