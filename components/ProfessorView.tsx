@@ -32,41 +32,7 @@ function secsSince(iso: string): number {
 
 // ── Sub-components ─────────────────────────────────────────────────────
 
-function BriefItem({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <p style={s.briefLabel}>{label}</p>
-      <p style={s.briefValue}>{value}</p>
-    </div>
-  );
-}
 
-function StatusBadge({ submitted, joinedAt }: { submitted: boolean; joinedAt: string }) {
-  if (submitted) {
-    return <Chip label="✓ Submitted" color="var(--green)" bg="rgba(52,211,153,0.1)" />;
-  }
-  if (secsSince(joinedAt) > 30) {
-    return <Chip label="Building..." color="var(--amber)" bg="rgba(251,146,60,0.1)" />;
-  }
-  return <Chip label="Waiting" color="var(--muted)" bg="rgba(113,113,122,0.1)" />;
-}
-
-function Chip({ label, color, bg }: { label: string; color: string; bg: string }) {
-  return (
-    <span style={{
-      fontSize: "0.72rem",
-      fontWeight: 700,
-      color,
-      background: bg,
-      padding: "2px 10px",
-      borderRadius: "99px",
-      letterSpacing: "0.04em",
-      whiteSpace: "nowrap",
-    }}>
-      {label}
-    </span>
-  );
-}
 
 // ── Main Component ─────────────────────────────────────────────────────
 
@@ -504,104 +470,79 @@ export default function ProfessorView() {
 
   if (stage === 1 && user) {
     return (
-      <div style={s.page}>
-        <div style={s.header}>
-          <h1 style={s.title}>Create Session</h1>
-          <p style={s.muted}>
-            Signed in as{" "}
-            <span style={{ color: "var(--accent)" }}>{user.email}</span>
-          </p>
-        </div>
+      <div style={{ minHeight: "100vh", background: "#f4f4f4", fontFamily: "Arial, Helvetica, sans-serif" }}>
+        <HdMHeader
+          title="Campaign Lab"
+          subtitle="Create Session"
+          right={
+            <button
+              onClick={async () => { await supabase.auth.signOut(); setUser(null); setStage(1); }}
+              style={{ background: "white", border: "1px solid #e30613", borderRadius: "6px", padding: "0.4rem 0.9rem", fontSize: "0.78rem", fontWeight: 700, color: "#e30613", cursor: "pointer", fontFamily: "Arial, sans-serif" }}
+            >
+              &#x2192; Sign Out
+            </button>
+          }
+        />
 
-        {/* Session code */}
-        <div style={s.card}>
-          <p style={{ ...s.label, marginBottom: "0.6rem" }}>Session Code</p>
-          <div style={{ display: "flex", alignItems: "center", gap: "1rem", flexWrap: "wrap" }}>
-            <span style={s.codeDisplay}>{sessionCode}</span>
-            <button onClick={() => handleCopy(sessionCode)} style={s.btnOutline}>
-              {copied ? "✓ Copied" : "📋 Copy"}
+        <div style={{ maxWidth: "700px", margin: "0 auto", padding: "1.75rem 2rem 4rem" }}>
+          <div style={{ marginBottom: "1.5rem" }}>
+            <h1 style={{ fontSize: "1.4rem", fontWeight: 700, color: "#1a1a1a", margin: "0 0 0.2rem 0" }}>Create a Session</h1>
+            <p style={{ color: "#777", margin: 0, fontSize: "0.82rem" }}>Signed in as <strong>{user.email}</strong></p>
+          </div>
+
+          <div style={lt.card}>
+            <p style={lt.label}>Your Session Code</p>
+            <div style={{ display: "flex", alignItems: "center", gap: "1rem", flexWrap: "wrap", marginTop: "0.5rem" }}>
+              <span style={{ fontFamily: "monospace", fontSize: "2rem", fontWeight: 700, letterSpacing: "0.25em", color: "#e30613", background: "#fef2f2", padding: "0.5rem 1.25rem", borderRadius: "6px", border: "1px solid #fca5a5" }}>
+                {sessionCode}
+              </span>
+              <button onClick={() => handleCopy(sessionCode)} style={lt.hBtn}>{copied ? "Copied" : "Copy"}</button>
+            </div>
+            <p style={{ ...lt.muted, marginTop: "0.4rem", fontSize: "0.75rem" }}>Share this code with your students</p>
+          </div>
+
+          <div style={lt.card}>
+            <div style={{ marginBottom: "1.1rem" }}>
+              <label style={lt.label}>Brand Name</label>
+              <input type="text" value={brandName} onChange={(e) => setBrandName(e.target.value)} placeholder="e.g. Volta Coffee" style={lt.input} />
+            </div>
+            <div style={{ marginBottom: "1.1rem" }}>
+              <label style={lt.label}>Industry</label>
+              <select value={industry} onChange={(e) => setIndustry(e.target.value)} style={lt.select}>
+                {["Fashion","Food & Beverage","Tech","Fitness","Travel","Education","Retail","Beauty","Finance"].map((o) => <option key={o}>{o}</option>)}
+              </select>
+            </div>
+            <div style={{ marginBottom: "1.1rem" }}>
+              <label style={lt.label}>Campaign Objective</label>
+              <div style={{ display: "flex", gap: "0.6rem", flexWrap: "wrap", marginTop: "0.5rem" }}>
+                {["Awareness","Leads","Sales"].map((o) => (
+                  <button key={o} onClick={() => setObjective(o)} style={{ padding: "0.45rem 1.1rem", borderRadius: "4px", border: `1px solid ${objective === o ? "#e30613" : "#ddd"}`, background: objective === o ? "#e30613" : "white", color: objective === o ? "white" : "#555", fontWeight: objective === o ? 700 : 400, fontSize: "0.85rem", cursor: "pointer", fontFamily: "Arial, sans-serif" }}>{o}</button>
+                ))}
+              </div>
+            </div>
+            <div style={{ marginBottom: "1.1rem" }}>
+              <label style={lt.label}>Budget</label>
+              <div style={{ display: "inline-block", background: "#f0fdf4", border: "1px solid #86efac", borderRadius: "6px", padding: "0.5rem 1rem", fontSize: "0.9rem", fontWeight: 600, color: "#16a34a" }}>
+                EUR 10,000 Virtual Budget
+              </div>
+            </div>
+            <div style={{ marginBottom: "1.1rem" }}>
+              <label style={lt.label}>Client Personality</label>
+              <select value={personality} onChange={(e) => setPersonality(e.target.value)} style={lt.select}>
+                {["Skeptical CFO — demands ROI justification","Excited startup founder — open to bold ideas","Conservative corporate director — values risk minimisation"].map((p) => <option key={p}>{p}</option>)}
+              </select>
+            </div>
+            <div style={{ marginBottom: "1.5rem" }}>
+              <label style={lt.label}>Time Limit</label>
+              <select value={timeLimit} onChange={(e) => setTimeLimit(Number(e.target.value))} style={lt.select}>
+                {[5,10,15,20].map((t) => <option key={t} value={t}>{t} minutes</option>)}
+              </select>
+            </div>
+            {launchError && <div style={{ ...lt.error, marginBottom: "1rem" }}>{launchError}</div>}
+            <button onClick={handleLaunch} disabled={launching || !brandName.trim()} style={{ ...lt.btnRed, opacity: launching || !brandName.trim() ? 0.5 : 1, cursor: launching || !brandName.trim() ? "not-allowed" : "pointer" }}>
+              {launching ? "Launching..." : "Launch Session"}
             </button>
           </div>
-          <p style={{ ...s.muted, fontSize: "0.75rem", marginTop: "0.5rem" }}>
-            Students use this code to join your session
-          </p>
-        </div>
-
-        {/* Form */}
-        <div style={s.card}>
-          <div style={s.field}>
-            <label style={s.label}>Brand Name</label>
-            <input
-              type="text"
-              value={brandName}
-              onChange={(e) => setBrandName(e.target.value)}
-              placeholder="e.g. Volta Coffee"
-              style={s.input}
-            />
-          </div>
-
-          <div style={s.field}>
-            <label style={s.label}>Industry</label>
-            <select value={industry} onChange={(e) => setIndustry(e.target.value)} style={s.select}>
-              {["Fashion","Food & Beverage","Tech","Fitness","Travel","Education","Retail","Beauty","Finance"]
-                .map((opt) => <option key={opt}>{opt}</option>)}
-            </select>
-          </div>
-
-          <div style={s.field}>
-            <label style={s.label}>Campaign Objective</label>
-            <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
-              {["Awareness", "Leads", "Sales"].map((opt) => (
-                <button
-                  key={opt}
-                  onClick={() => setObjective(opt)}
-                  style={{
-                    ...s.pill,
-                    background: objective === opt ? "var(--accent)" : "transparent",
-                    color: objective === opt ? "#fff" : "var(--muted)",
-                    borderColor: objective === opt ? "var(--accent)" : "var(--border)",
-                  }}
-                >
-                  {opt}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div style={s.field}>
-            <label style={s.label}>Budget</label>
-            <span style={s.budgetBadge}>€10,000 Virtual Budget</span>
-          </div>
-
-          <div style={s.field}>
-            <label style={s.label}>Client Personality</label>
-            <select value={personality} onChange={(e) => setPersonality(e.target.value)} style={s.select}>
-              {[
-                "Skeptical CFO — demands ROI justification",
-                "Excited startup founder — open to bold ideas",
-                "Conservative corporate director — values risk minimisation",
-              ].map((opt) => <option key={opt}>{opt}</option>)}
-            </select>
-          </div>
-
-          <div style={s.field}>
-            <label style={s.label}>Time Limit</label>
-            <select value={timeLimit} onChange={(e) => setTimeLimit(Number(e.target.value))} style={s.select}>
-              {[5, 10, 15, 20].map((t) => (
-                <option key={t} value={t}>{t} minutes</option>
-              ))}
-            </select>
-          </div>
-
-          {launchError && <div style={{ ...s.error, marginBottom: "1rem" }}>{launchError}</div>}
-
-          <button
-            onClick={handleLaunch}
-            disabled={launching || !brandName.trim()}
-            style={{ ...s.btnPrimary, opacity: launching || !brandName.trim() ? 0.55 : 1 }}
-          >
-            {launching ? "Launching…" : "🚀 Launch Session"}
-          </button>
         </div>
       </div>
     );
@@ -612,125 +553,106 @@ export default function ProfessorView() {
   if (stage === 2 && session) {
     const mins = String(Math.floor((timeLeft ?? 0) / 60)).padStart(2, "0");
     const secs = String((timeLeft ?? 0) % 60).padStart(2, "0");
-    const timerColor = (timeLeft ?? 999) < 60 ? "var(--red)" : "var(--accent)";
+    const timerUrgent = (timeLeft ?? 999) < 60;
 
     return (
-      <div style={s.page}>
-        {/* Curveball overlay — self-contained */}
-        {showCurveball && (
-          <CurveballPanel
-            sessionId={session.id}
-            onClose={() => setShowCurveball(false)}
-          />
-        )}
+      <div style={{ minHeight: "100vh", background: "#f4f4f4", fontFamily: "Arial, Helvetica, sans-serif" }}>
+        {showCurveball && <CurveballPanel sessionId={session.id} onClose={() => setShowCurveball(false)} />}
 
-        {/* Header */}
-        <div style={{ ...s.header, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-          <h1 style={s.title}>Live Session</h1>
-          <span style={{
-            background: "var(--green)", color: "#000",
-            fontSize: "0.65rem", fontWeight: 700, letterSpacing: "0.1em",
-            padding: "3px 10px", borderRadius: "99px",
-          }}>● LIVE</span>
-        </div>
+        <HdMHeader
+          title="Campaign Lab"
+          subtitle="Live Session"
+          badge="LIVE"
+          right={
+            <div style={{ display: "flex", gap: "0.5rem" }}>
+              <button onClick={() => window.location.reload()} style={lt.hBtn}>&#x21BA; Refresh</button>
+              <button onClick={async () => { await supabase.auth.signOut(); setUser(null); setStage(1); setSession(null); setTeams([]); }} style={{ ...lt.hBtn, color: "#e30613", borderColor: "#e30613" }}>
+                &#x2192; Sign Out
+              </button>
+            </div>
+          }
+        />
 
-        {/* Session code */}
-        <div style={{ ...s.card, textAlign: "center" }}>
-          <p style={{ ...s.label, marginBottom: "0.75rem" }}>Share this code with your students</p>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "1rem", flexWrap: "wrap" }}>
-            <span style={{ ...s.codeDisplay, fontSize: "3rem", letterSpacing: "0.3em" }}>
-              {session.session_code}
-            </span>
-            <button onClick={() => handleCopy(session.session_code)} style={s.btnOutline}>
-              {copied ? "✓ Copied" : "📋 Copy Code"}
-            </button>
+        <div style={{ maxWidth: "900px", margin: "0 auto", padding: "1.5rem 2rem 4rem" }}>
+
+          <div style={{ ...lt.card, textAlign: "center" }}>
+            <p style={{ ...lt.label, marginBottom: "0.75rem" }}>Share this code with your students</p>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "1rem", flexWrap: "wrap" }}>
+              <span style={{ fontFamily: "monospace", fontSize: "3rem", fontWeight: 700, letterSpacing: "0.3em", color: "#e30613", background: "#fef2f2", padding: "0.5rem 1.5rem", borderRadius: "6px", border: "1px solid #fca5a5" }}>
+                {session.session_code}
+              </span>
+              <button onClick={() => handleCopy(session.session_code)} style={lt.hBtn}>{copied ? "Copied" : "Copy Code"}</button>
+            </div>
           </div>
-        </div>
 
-        {/* Countdown */}
-        <div style={{ ...s.card, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <p style={s.label}>Time Remaining</p>
-          <span style={{ fontFamily: "monospace", fontSize: "2rem", fontWeight: 700, color: timerColor }}>
-            {mins}:{secs}
-          </span>
-        </div>
-
-        {/* Brief summary */}
-        <div style={s.card}>
-          <p style={{ ...s.label, marginBottom: "0.75rem" }}>Session Brief</p>
-          <div style={s.briefGrid}>
-            <BriefItem label="Brand" value={session.brand_name} />
-            <BriefItem label="Industry" value={session.industry} />
-            <BriefItem label="Objective" value={session.objective} />
-            <BriefItem label="Budget" value="€10,000" />
-            <BriefItem label="Client" value={session.client_personality} />
-          </div>
-        </div>
-
-        {/* Teams */}
-        <div style={s.card}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
-            <p style={s.label}>Teams</p>
-            <span style={{ ...s.muted, fontSize: "0.8rem" }}>
-              {teams.length} joined · {submittedCount} submitted
+          <div style={{ ...lt.card, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span style={lt.label}>Time Remaining</span>
+            <span style={{ fontFamily: "monospace", fontSize: "2rem", fontWeight: 700, color: timerUrgent ? "#dc2626" : "#16a34a" }}>
+              {mins}:{secs}
             </span>
           </div>
 
-          {teams.length === 0 ? (
-            <p style={{ ...s.muted, textAlign: "center", padding: "2rem 0" }}>
-              Waiting for teams to join…
-            </p>
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
-              {teams.map((team) => (
-                <div key={team.id} style={s.teamRow}>
-                  <div>
-                    <span style={{ fontWeight: 600, color: "var(--text)" }}>{team.team_name}</span>
-                    <span style={{ ...s.muted, fontSize: "0.73rem", marginLeft: "0.75rem" }}>
-                      joined {timeAgo(team.joined_at)}
-                    </span>
-                  </div>
-                  <StatusBadge submitted={team.submitted} joinedAt={team.joined_at} />
+          <div style={lt.card}>
+            <p style={{ ...lt.label, marginBottom: "0.75rem" }}>Session Brief</p>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: "1rem" }}>
+              {[{l:"Brand",v:session.brand_name},{l:"Industry",v:session.industry},{l:"Objective",v:session.objective},{l:"Budget",v:"EUR 10,000"},{l:"Client",v:session.client_personality}].map(({l,v}) => (
+                <div key={l}>
+                  <p style={{ fontSize: "0.65rem", color: "#999", textTransform: "uppercase", letterSpacing: "0.06em", margin: "0 0 0.2rem 0" }}>{l}</p>
+                  <p style={{ fontSize: "0.82rem", fontWeight: 600, color: "#1a1a1a", margin: 0 }}>{v}</p>
                 </div>
               ))}
             </div>
-          )}
-        </div>
-
-        {/* Action buttons */}
-        <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap" }}>
-          <div style={{ flex: 1, minWidth: "200px" }}>
-            <button
-              onClick={handleSimulate}
-              disabled={!canSimulate || simulating}
-              title={!canSimulate ? "Need at least 2 submissions" : ""}
-              style={{
-                ...s.btnPrimary,
-                width: "100%",
-                opacity: !canSimulate || simulating ? 0.5 : 1,
-                cursor: !canSimulate ? "not-allowed" : "pointer",
-              }}
-            >
-              {simulating ? "Running Gemini simulation…" : "⚡ Run Market Simulation"}
-            </button>
-            {!canSimulate && (
-              <p style={{ ...s.muted, fontSize: "0.73rem", marginTop: "0.4rem", textAlign: "center" }}>
-                Need at least 2 submissions
-              </p>
-            )}
-            {simError && <div style={{ ...s.error, marginTop: "0.5rem" }}>{simError}</div>}
           </div>
 
-          <button
-            onClick={() => setShowCurveball(true)}
-            style={{ ...s.btnOutline, flex: 1, minWidth: "200px" }}
-          >
-            🌪 Inject Curveball
-          </button>
+          <div style={lt.card}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+              <p style={lt.label}>Teams</p>
+              <span style={{ ...lt.muted, fontSize: "0.8rem" }}>{teams.length} joined &middot; {submittedCount} submitted</span>
+            </div>
+            {teams.length === 0 ? (
+              <p style={{ ...lt.muted, textAlign: "center", padding: "1.5rem 0" }}>Waiting for teams to join...</p>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                {teams.map((team) => {
+                  const age = secsSince(team.joined_at);
+                  const badge = team.submitted
+                    ? { label: "Submitted", color: "#16a34a", bg: "#f0fdf4" }
+                    : age > 30
+                    ? { label: "Building...", color: "#d97706", bg: "#fefce8" }
+                    : { label: "Waiting", color: "#999", bg: "#f5f5f5" };
+                  return (
+                    <div key={team.id} style={{ background: "#f9f9f9", border: "1px solid #e8e8e8", borderRadius: "6px", padding: "0.75rem 1rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <div>
+                        <span style={{ fontWeight: 600, color: "#1a1a1a", fontSize: "0.9rem" }}>{team.team_name}</span>
+                        <span style={{ color: "#999", fontSize: "0.73rem", marginLeft: "0.75rem" }}>joined {timeAgo(team.joined_at)}</span>
+                      </div>
+                      <span style={{ fontSize: "0.72rem", fontWeight: 700, color: badge.color, background: badge.bg, padding: "3px 12px", borderRadius: "99px", border: `1px solid ${badge.color}55` }}>
+                        {badge.label}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+            <div>
+              <button onClick={handleSimulate} disabled={!canSimulate || simulating} style={{ width: "100%", padding: "0.9rem", background: canSimulate ? "#e30613" : "#e0e0e0", color: canSimulate ? "white" : "#999", border: "none", borderRadius: "6px", fontSize: "0.95rem", fontWeight: 700, cursor: canSimulate ? "pointer" : "not-allowed", fontFamily: "Arial, sans-serif" }}>
+                {simulating ? "Running simulation..." : "Run Market Simulation"}
+              </button>
+              {!canSimulate && <p style={{ ...lt.muted, fontSize: "0.72rem", textAlign: "center", marginTop: "0.4rem" }}>Need at least 2 submissions</p>}
+              {simError && <div style={{ ...lt.error, marginTop: "0.5rem" }}>{simError}</div>}
+            </div>
+            <button onClick={() => setShowCurveball(true)} style={{ padding: "0.9rem", background: "white", color: "#1a1a1a", border: "1px solid #ddd", borderRadius: "6px", fontSize: "0.9rem", fontWeight: 600, cursor: "pointer", fontFamily: "Arial, sans-serif" }}>
+              Inject Curveball
+            </button>
+          </div>
         </div>
       </div>
     );
   }
+
 
   // ── STAGE 3 — Results Dashboard (White Professional Layout) ─────────────
 
@@ -753,10 +675,14 @@ export default function ProfessorView() {
         badge="Complete"
         right={
           <>
-            <button onClick={downloadCSV} style={lb.hBtn}>📥 Export CSV</button>
-            <button onClick={() => window.print()} style={lb.hBtn}>🖨 Print</button>
+            <button onClick={downloadCSV} style={lb.hBtn}>Export CSV</button>
+            <button onClick={() => window.print()} style={lb.hBtn}>Print</button>
+            <button onClick={() => window.location.reload()} style={lb.hBtn}>&#x21BA; Refresh</button>
             <button onClick={handleReset} style={{ ...lb.hBtn, color: "#e30613", borderColor: "#e30613" }}>
-              🔄 New Session
+              New Session
+            </button>
+            <button onClick={async () => { await supabase.auth.signOut(); setUser(null); setStage(1); setSession(null); setTeams([]); }} style={{ ...lb.hBtn, color: "#e30613", borderColor: "#e30613" }}>
+              &#x2192; Sign Out
             </button>
           </>
         }
@@ -907,6 +833,19 @@ export default function ProfessorView() {
     </div>
   );
 }
+
+// ── Light theme (lt) — used across all professor stages ───────────────
+
+const lt = {
+  card: { background: "white", borderRadius: "8px", padding: "1.5rem", boxShadow: "0 1px 3px rgba(0,0,0,0.07)", marginBottom: "1.25rem" } as CSSProperties,
+  label: { fontSize: "0.7rem", fontWeight: 700, color: "#777", textTransform: "uppercase" as const, letterSpacing: "0.1em", display: "block", marginBottom: "0.4rem", fontFamily: "Arial, sans-serif", margin: 0 } as CSSProperties,
+  muted: { color: "#888", fontSize: "0.82rem", margin: 0, fontFamily: "Arial, sans-serif" } as CSSProperties,
+  input: { display: "block", width: "100%", boxSizing: "border-box" as const, padding: "0.7rem 0.85rem", border: "1px solid #ddd", borderRadius: "6px", fontSize: "0.9rem", color: "#1a1a1a", background: "white", outline: "none", fontFamily: "Arial, sans-serif" } as CSSProperties,
+  select: { display: "block", width: "100%", boxSizing: "border-box" as const, padding: "0.7rem 0.85rem", border: "1px solid #ddd", borderRadius: "6px", fontSize: "0.9rem", color: "#1a1a1a", background: "white", outline: "none", fontFamily: "Arial, sans-serif", cursor: "pointer" } as CSSProperties,
+  btnRed: { display: "block", width: "100%", padding: "0.8rem", background: "#e30613", color: "white", border: "none", borderRadius: "6px", fontSize: "0.95rem", fontWeight: 700, cursor: "pointer", fontFamily: "Arial, sans-serif" } as CSSProperties,
+  hBtn: { background: "white", border: "1px solid #d0d0d0", borderRadius: "6px", padding: "0.4rem 0.85rem", fontSize: "0.78rem", fontWeight: 600, color: "#444", cursor: "pointer", fontFamily: "Arial, sans-serif", whiteSpace: "nowrap" as const } as CSSProperties,
+  error: { background: "#fef2f2", border: "1px solid #fca5a5", borderRadius: "6px", padding: "0.65rem 1rem", color: "#dc2626", fontSize: "0.85rem", fontFamily: "Arial, sans-serif" } as CSSProperties,
+};
 
 // ── Light dashboard button style ──────────────────────────────────────
 

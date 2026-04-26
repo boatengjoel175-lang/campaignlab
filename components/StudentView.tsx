@@ -494,6 +494,12 @@ export default function StudentView() {
                 <div style={{ fontSize: "0.78rem", fontWeight: 600, color: "#555", background: "white", border: "1px solid #e0e0e0", borderRadius: "6px", padding: "0.3rem 0.75rem" }}>
                   {teamName}
                 </div>
+                <button onClick={() => window.location.reload()} style={{ background: "white", border: "1px solid #d0d0d0", borderRadius: "6px", padding: "0.3rem 0.75rem", fontSize: "0.75rem", fontWeight: 600, color: "#444", cursor: "pointer", fontFamily: "Arial, sans-serif" }}>
+                  &#x21BA; Refresh
+                </button>
+                <button onClick={() => { localStorage.removeItem("campaignlab_student"); setStage(1); setSession(null); setTeamId(null); setTeamName(""); setSessionCode(""); }} style={{ background: "white", border: "1px solid #e30613", borderRadius: "6px", padding: "0.3rem 0.75rem", fontSize: "0.75rem", fontWeight: 700, color: "#e30613", cursor: "pointer", fontFamily: "Arial, sans-serif" }}>
+                  &#x2192; Exit
+                </button>
               </div>
             }
           />
@@ -602,124 +608,93 @@ export default function StudentView() {
     );
   }
 
-  // ── STAGE 3 — Waiting for results ────────────────────────────────────
+  // ── STAGE 3 — Waiting / Results (white HdM theme) ─────────────────────
 
   return (
     <>
-      {/* Professor-highlighted reflection banner */}
       {highlightBanner && (
-        <div style={{
-          position: "fixed",
-          top: 0, left: 0, right: 0,
-          background: "var(--accent)",
-          color: "white",
-          padding: "1.25rem 2rem",
-          zIndex: 300,
-          boxShadow: "0 4px 24px rgba(0,0,0,0.4)",
-        }}>
-          <p style={{ fontWeight: 700, fontSize: "0.75rem", letterSpacing: "0.1em", textTransform: "uppercase", margin: "0 0 0.5rem 0", opacity: 0.8 }}>
-            💡 Professor Highlight — {highlightBanner.team_name}
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, background: "#e30613", color: "white", padding: "1.25rem 2rem", zIndex: 300, boxShadow: "0 4px 24px rgba(0,0,0,0.3)" }}>
+          <p style={{ fontWeight: 700, fontSize: "0.72rem", letterSpacing: "0.1em", textTransform: "uppercase", margin: "0 0 0.5rem 0", opacity: 0.85 }}>
+            Professor Highlight — {highlightBanner.team_name}
           </p>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "0.75rem" }}>
-            {[
-              { label: "Biggest mistake", text: highlightBanner.biggest_mistake },
-              { label: "Winning insight", text: highlightBanner.winning_insight },
-              { label: "Biggest surprise", text: highlightBanner.biggest_surprise },
-            ].map((item) => (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "0.75rem" }}>
+            {[{label:"Biggest mistake",text:highlightBanner.biggest_mistake},{label:"Winning insight",text:highlightBanner.winning_insight},{label:"Biggest surprise",text:highlightBanner.biggest_surprise}].map((item) => (
               <div key={item.label}>
-                <p style={{ fontSize: "0.65rem", opacity: 0.7, textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 0.2rem 0" }}>{item.label}</p>
-                <p style={{ fontSize: "0.875rem", margin: 0 }}>{item.text}</p>
+                <p style={{ fontSize: "0.62rem", opacity: 0.7, textTransform: "uppercase", letterSpacing: "0.08em", margin: "0 0 0.2rem 0" }}>{item.label}</p>
+                <p style={{ fontSize: "0.85rem", margin: 0 }}>{item.text}</p>
               </div>
             ))}
           </div>
-          <button onClick={() => setHighlightBanner(null)} style={{ position: "absolute", top: "0.75rem", right: "1rem", background: "transparent", border: "none", color: "white", cursor: "pointer", fontSize: "1.1rem", opacity: 0.7 }}>✕</button>
+          <button onClick={() => setHighlightBanner(null)} style={{ position: "absolute", top: "0.75rem", right: "1rem", background: "transparent", border: "none", color: "white", cursor: "pointer", fontSize: "1.1rem", opacity: 0.7 }}>x</button>
         </div>
       )}
 
-      <div style={{ ...s.page, paddingTop: highlightBanner ? "8rem" : undefined }}>
-        {!showResult ? (
-          <div style={{ textAlign: "center", padding: "4rem 0" }}>
-            <div style={{ fontSize: "3.5rem" }}>✅</div>
-            <h2 style={{ ...s.title, marginTop: "1rem" }}>Strategy submitted!</h2>
-            <p style={{ ...s.muted, marginTop: "0.5rem" }}>
-              Waiting for professor to run simulation
-            </p>
-            <PulsingDots />
-          </div>
-        ) : result ? (
-          <div style={{ opacity: 1, transition: "opacity 0.5s ease" }}>
-            <div style={{ textAlign: "center", marginBottom: "2rem" }}>
-              <div style={{ fontSize: "2.5rem", letterSpacing: "0.1em" }}>🎉 🏆 🎉</div>
-              <h2 style={{ ...s.title, marginTop: "0.75rem" }}>The market has spoken.</h2>
-              <p style={{ ...s.muted, marginTop: "0.25rem" }}>Here are your results.</p>
+      <div style={{ minHeight: "100vh", background: "#f4f4f4", fontFamily: "Arial, Helvetica, sans-serif", paddingTop: highlightBanner ? "8rem" : undefined }}>
+        <HdMHeader
+          title="Campaign Lab"
+          subtitle={showResult ? "Your Results" : "Waiting for Simulation"}
+          right={
+            <div style={{ display: "flex", gap: "0.5rem" }}>
+              <button onClick={() => window.location.reload()} style={{ background: "white", border: "1px solid #d0d0d0", borderRadius: "6px", padding: "0.4rem 0.85rem", fontSize: "0.78rem", fontWeight: 600, color: "#444", cursor: "pointer", fontFamily: "Arial, sans-serif" }}>
+                &#x21BA; Refresh
+              </button>
+              <button onClick={() => { localStorage.removeItem("campaignlab_student"); setStage(1); setSession(null); setTeamId(null); setTeamName(""); setSessionCode(""); }} style={{ background: "white", border: "1px solid #e30613", borderRadius: "6px", padding: "0.4rem 0.85rem", fontSize: "0.78rem", fontWeight: 700, color: "#e30613", cursor: "pointer", fontFamily: "Arial, sans-serif" }}>
+                &#x2192; Exit
+              </button>
             </div>
+          }
+        />
 
-            <ScoreCard result={result} team_name={teamName || "Your Team"} />
-
-            {/* ── Reflection journal ── */}
-            <div style={{ ...s.card, marginTop: "1.5rem" }}>
-              <h3 style={{ fontSize: "1.1rem", fontWeight: 700, color: "var(--text)", margin: "0 0 0.25rem 0" }}>
-                Take a moment to reflect 🧠
-              </h3>
-              <p style={{ ...s.muted, marginBottom: "1.25rem" }}>
-                Your answers are anonymous to other students.
-              </p>
-
-              {reflSubmitted ? (
-                <div style={{ textAlign: "center", padding: "1.5rem 0" }}>
-                  <div style={{ fontSize: "2rem", marginBottom: "0.5rem" }}>🙏</div>
-                  <p style={{ color: "var(--green)", fontWeight: 700, margin: "0 0 0.25rem 0" }}>
-                    Thank you — your professor can see this.
-                  </p>
-                </div>
-              ) : (
-                <>
-                  {[
-                    { label: "What was the biggest mistake in your strategy?", val: reflMistake, set: setReflMistake },
-                    { label: "What did the winning team do that you didn't?", val: reflInsight, set: setReflInsight },
-                    { label: "What surprised you most about this simulation?", val: reflSurprise, set: setReflSurprise },
-                  ].map(({ label, val, set }) => (
-                    <div key={label} style={{ marginBottom: "1rem" }}>
-                      <label style={{ display: "block", fontSize: "0.8rem", color: "var(--muted)", marginBottom: "0.4rem", lineHeight: 1.4 }}>
-                        {label}
-                      </label>
-                      <textarea
-                        value={val}
-                        onChange={(e) => set(e.target.value)}
-                        rows={3}
-                        style={{
-                          width: "100%",
-                          boxSizing: "border-box",
-                          background: "var(--surface)",
-                          border: "1px solid var(--border)",
-                          borderRadius: "8px",
-                          padding: "0.65rem 0.85rem",
-                          color: "var(--text)",
-                          fontSize: "0.875rem",
-                          fontFamily: "inherit",
-                          resize: "vertical",
-                          outline: "none",
-                          lineHeight: 1.5,
-                        }}
-                      />
-                    </div>
-                  ))}
-                  <button
-                    onClick={handleReflection}
-                    disabled={reflSubmitting || (!reflMistake.trim() && !reflInsight.trim() && !reflSurprise.trim())}
-                    style={{
-                      ...s.btnGreen,
-                      opacity: reflSubmitting ? 0.6 : 1,
-                      marginTop: "0.5rem",
-                    }}
-                  >
-                    {reflSubmitting ? "Submitting…" : "Submit Reflection"}
-                  </button>
-                </>
-              )}
+        <div style={{ maxWidth: "720px", margin: "0 auto", padding: "2rem 1.5rem 4rem" }}>
+          {!showResult ? (
+            <div style={{ textAlign: "center", padding: "4rem 0" }}>
+              <div style={{ fontSize: "3.5rem" }}>&#x2705;</div>
+              <h2 style={{ fontSize: "1.4rem", fontWeight: 700, color: "#1a1a1a", margin: "1rem 0 0.25rem 0" }}>Strategy submitted!</h2>
+              <p style={{ color: "#777", margin: 0 }}>Waiting for professor to run simulation</p>
+              <PulsingDots />
             </div>
-          </div>
-        ) : null}
+          ) : result ? (
+            <div>
+              <div style={{ textAlign: "center", marginBottom: "2rem" }}>
+                <div style={{ fontSize: "2.5rem", letterSpacing: "0.1em" }}>&#x1F3C6; &#x1F389; &#x1F3C6;</div>
+                <h2 style={{ fontSize: "1.4rem", fontWeight: 700, color: "#1a1a1a", margin: "0.75rem 0 0.25rem 0" }}>The market has spoken.</h2>
+                <p style={{ color: "#777", margin: 0 }}>Here are your results.</p>
+              </div>
+
+              <div style={{ "--card": "#ffffff", "--surface": "#f8f9fa", "--border": "#e8e8e8", "--text": "#1a1a1a", "--muted": "#777", "--accent": "#e30613", "--green": "#16a34a", "--amber": "#d97706", "--red": "#dc2626" } as React.CSSProperties}>
+                <ScoreCard result={result} team_name={teamName || "Your Team"} />
+              </div>
+
+              <div style={{ background: "white", borderRadius: "8px", padding: "1.5rem", boxShadow: "0 1px 3px rgba(0,0,0,0.07)", marginTop: "1.5rem" }}>
+                <h3 style={{ fontSize: "1rem", fontWeight: 700, color: "#1a1a1a", margin: "0 0 0.25rem 0" }}>Take a moment to reflect &#x1F9E0;</h3>
+                <p style={{ color: "#777", fontSize: "0.82rem", margin: "0 0 1.25rem 0" }}>Your answers are anonymous to other students.</p>
+
+                {reflSubmitted ? (
+                  <div style={{ textAlign: "center", padding: "1rem" }}>
+                    <div style={{ fontSize: "2rem" }}>&#x1F64F;</div>
+                    <p style={{ color: "#16a34a", fontWeight: 700, margin: "0.5rem 0 0 0" }}>Thank you - your professor can see this.</p>
+                  </div>
+                ) : (
+                  <>
+                    {[
+                      { label: "What was the biggest mistake in your strategy?", val: reflMistake, set: setReflMistake },
+                      { label: "What did the winning team do that you did not?", val: reflInsight, set: setReflInsight },
+                      { label: "What surprised you most about this simulation?", val: reflSurprise, set: setReflSurprise },
+                    ].map(({ label, val, set }) => (
+                      <div key={label} style={{ marginBottom: "1rem" }}>
+                        <label style={{ display: "block", fontSize: "0.78rem", color: "#555", marginBottom: "0.4rem", fontFamily: "Arial, sans-serif" }}>{label}</label>
+                        <textarea value={val} onChange={(e) => set(e.target.value)} rows={3} style={{ width: "100%", boxSizing: "border-box", background: "white", border: "1px solid #ddd", borderRadius: "6px", padding: "0.65rem 0.85rem", color: "#1a1a1a", fontSize: "0.875rem", fontFamily: "Arial, sans-serif", resize: "vertical", outline: "none" }} />
+                      </div>
+                    ))}
+                    <button onClick={handleReflection} disabled={reflSubmitting || (!reflMistake.trim() && !reflInsight.trim() && !reflSurprise.trim())} style={{ display: "block", width: "100%", padding: "0.75rem", background: "#e30613", color: "white", border: "none", borderRadius: "6px", fontSize: "0.9rem", fontWeight: 700, cursor: "pointer", fontFamily: "Arial, sans-serif", opacity: reflSubmitting ? 0.7 : 1 }}>
+                      {reflSubmitting ? "Submitting..." : "Submit Reflection"}
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          ) : null}
+        </div>
       </div>
     </>
   );
