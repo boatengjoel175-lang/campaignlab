@@ -55,11 +55,21 @@ Return ONLY this JSON object (no markdown, no extra text):
 }`;
 
   const result = await model.generateContent(prompt);
-  const text = result.response.text();
+  let text = result.response.text();
+
+  // Strip markdown code fences if Gemini wraps the JSON
+  text = text.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "").trim();
 
   try {
     return JSON.parse(text) as SimulationResult;
   } catch {
-    throw new Error("Gemini returned invalid JSON: " + text);
+    // Second attempt: extract first {...} block from the text
+    const match = text.match(/\{[\s\S]*\}/);
+    if (match) {
+      try {
+        return JSON.parse(match[0]) as SimulationResult;
+      } catch { /* fall through */ }
+    }
+    throw new Error("Gemini returned invalid JSON: " + text.slice(0, 200));
   }
 }

@@ -1,6 +1,8 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextResponse } from "next/server";
 
+export const maxDuration = 60;
+
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 export async function POST(request: Request) {
@@ -37,7 +39,9 @@ Return ONLY this JSON (no markdown, no extra text):
 {"worked":["point 1","point 2","point 3"],"improve":["point 1","point 2","point 3"]}`;
 
     const r = await model.generateContent(prompt);
-    const parsed = JSON.parse(r.response.text());
+    let text = r.response.text();
+    text = text.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "").trim();
+    const parsed = JSON.parse(text);
     return NextResponse.json(parsed);
   } catch (error: unknown) {
     console.error("analyze-result error:", error);
