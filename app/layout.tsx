@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { ToastContainer } from "@/components/Toast";
+import KeepAlive from "@/components/KeepAlive";
 
 export const metadata: Metadata = {
   title: "CampaignLab",
@@ -17,6 +18,7 @@ export default function RootLayout({
       <body>
         {children}
         <ToastContainer />
+        <KeepAlive />
       </body>
     </html>
   );
