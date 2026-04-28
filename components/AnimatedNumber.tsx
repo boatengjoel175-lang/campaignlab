@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { memo, useState, useEffect } from "react";
 
-export default function AnimatedNumber({
+function AnimatedNumber({
   value,
   duration = 1500,
   decimals = 0,
@@ -31,3 +31,6 @@ export default function AnimatedNumber({
   if (decimals > 0) return <>{display.toFixed(decimals)}</>;
   return <>{Math.round(display).toLocaleString()}</>;
 }
+
+// memo prevents re-renders when parent re-renders but value hasn't changed
+export default memo(AnimatedNumber);

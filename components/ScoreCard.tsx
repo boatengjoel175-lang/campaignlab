@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { Source_Sans_3 } from "next/font/google";
 import { createClient } from "@/lib/supabase";
 import type { SimulationResult, Strategy, Platform } from "@/lib/types";
@@ -50,7 +50,15 @@ function badge(score: number) {
 
 function Ring({ score }: { score: number }) {
   const [p, setP] = useState(0);
-  useEffect(() => { const t = setTimeout(() => setP(score), 200); return () => clearTimeout(t); }, [score]);
+  const hasAnimated = useRef(false);
+
+  useEffect(() => {
+    if (hasAnimated.current) return;
+    hasAnimated.current = true;
+    const t = setTimeout(() => setP(score), 200);
+    return () => clearTimeout(t);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const offset = CIRCUMFERENCE - (p / 100) * CIRCUMFERENCE;
   return (
     <div style={{ position: "relative", width: "80px", height: "80px", flexShrink: 0 }}>
@@ -188,14 +196,19 @@ export default function ScoreCard({ result, teamName, teamId, sessionId, scenari
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [strategy]);
 
-  const rank = allResults.length > 0 ? allResults.findIndex(r => r.team_id === teamId) + 1 : null;
+  const sortedResults = useMemo(
+    () => [...allResults].sort((a, b) => b.roi - a.roi),
+    [allResults]
+  );
 
-  const METRICS = [
+  const rank = sortedResults.length > 0 ? sortedResults.findIndex(r => r.team_id === teamId) + 1 : null;
+
+  const METRICS = useMemo(() => [
     { key: "reach",      label: "Reach",           topColor: "#e30613", displayVal: toScore("reach", result),   unit: "/100",  decimals: 0, explanation: result.reach_explanation },
     { key: "engagement", label: "Engagement Rate",  topColor: "#1a1a1a", displayVal: result.engagement_rate,     unit: "%",     decimals: 1, explanation: result.engagement_explanation },
     { key: "conversion", label: "Conversion Rate",  topColor: "#666666", displayVal: result.conversion_rate,     unit: "%",     decimals: 1, explanation: result.conversion_explanation },
     { key: "roi",        label: "ROI",              topColor: "#e30613", displayVal: result.roi,                 unit: "× ROI", decimals: 1, explanation: result.roi_explanation },
-  ];
+  ], [result]);
 
   const container: React.CSSProperties = { maxWidth: "1100px", margin: "0 auto", padding: "2.5rem 2rem" };
 
@@ -360,11 +373,11 @@ export default function ScoreCard({ result, teamName, teamId, sessionId, scenari
       )}
 
       {/* ── SECTION 4: CLASS COMPARISON ──────────────────────────── */}
-      {allResults.length > 1 && (
+      {sortedResults.length > 1 && (
         <section style={{ background: "#f5f5f5", padding: "2.5rem 2rem" }}>
           <div style={container}>
             <SectionHead>How You Compare to the Class</SectionHead>
-            <ComparisonChart rows={allResults} myId={teamId} />
+            <ComparisonChart rows={sortedResults} myId={teamId} />
           </div>
         </section>
       )}
